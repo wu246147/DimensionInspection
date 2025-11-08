@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CaliperToolPara</class>
+ <widget class="QWidget" name="CaliperToolPara">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_45">
+     <property name="text">
+      <string>找边极性</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QComboBox" name="comboBox_location_caliper1_transition">
+     <item>
+      <property name="text">
+       <string>所有</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>黑到白</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>白到黑</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_44">
+     <property name="text">
+      <string>找边模式</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="comboBox_location_caliper1_select">
+     <item>
+      <property name="text">
+       <string>所有</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>第一边</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>最后一边</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_36">
+     <property name="text">
+      <string>阈值</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QSpinBox" name="spinBox_location_caliper1_thre">
+     <property name="minimum">
+      <number>5</number>
+     </property>
+     <property name="maximum">
+      <number>60</number>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
