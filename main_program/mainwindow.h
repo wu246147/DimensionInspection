@@ -33,7 +33,7 @@
 #include "tool/communicationcom.h"
 #include "tool/communicationmodbus.h"
 #include "tool/projecttool.h"
-
+#include "tool/plc_siemens.h"
 #include "dialogrobotacq.h"
 
 #pragma execution_character_set("utf-8")
@@ -528,6 +528,8 @@ private slots:
     void robotGrab();
 
 
+    void on_pushButton_sim_3_clicked(bool checked);
+
 signals:
 
     ///
@@ -612,6 +614,11 @@ private:
     //机器人2通讯管理对象
     Communication communication;
 
+    //plc 通讯
+    PLC_Siemens *plcSiemens;
+
+    QString plcIPAddress = "192.168.1.5";
+    int DB_No = 1;
 
     //光源通讯管理对象
     COM communicationCOM;

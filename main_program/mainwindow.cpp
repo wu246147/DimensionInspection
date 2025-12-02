@@ -458,7 +458,10 @@ MainWindow::MainWindow(QWidget *parent)
     bool cam_rt = jobmanager.mvs_open_device();
     LOGE_HIGH("MainWindow finish cam init")
 
-    //机器人通讯
+    //plc通讯
+    plcSiemens = new PLC_Siemens(plcIPAddress, DB_No, 50);
+    plcSiemens->m_exitThread = true;
+    plcSiemens->start();
 
     //tcp通讯初始化
     communication.tcp_server_init();
@@ -934,19 +937,25 @@ bool MainWindow::readCommunicationPara()
     communication.plc_ip = bookElement.attribute("plc_ip", "").toStdString();
     communication.net_port = bookElement.attribute("net_port", "").toInt();
 
-    LOGE_HIGH("communicationModbus.plc_ip:%s", communicationModbus.plc_ip.data());
-    LOGE_HIGH("communicationModbus.net_port:%d", communicationModbus.net_port);
+    // LOGE_HIGH("communicationModbus.plc_ip:%s", communicationModbus.plc_ip.data());
+    // LOGE_HIGH("communicationModbus.net_port:%d", communicationModbus.net_port);
 
     QDomElement bookElement2 = bookNodeList.at(1).toElement();
     communicationModbus.plc_ip = bookElement2.attribute("plc_ip", "").toStdString();
     communicationModbus.net_port = bookElement2.attribute("net_port", "").toInt();
-    LOGE_HIGH("communicationModbus.plc_ip:%s", communicationModbus.plc_ip.data());
-    LOGE_HIGH("communicationModbus.net_port:%d", communicationModbus.net_port);
+    // LOGE_HIGH("communicationModbus.plc_ip:%s", communicationModbus.plc_ip.data());
+    // LOGE_HIGH("communicationModbus.net_port:%d", communicationModbus.net_port);
 
 
     QDomElement bookElement3 = bookNodeList.at(2).toElement();
     communicationCOM.port_name = bookElement3.attribute("port_name", "").toStdString();
-    LOGE_HIGH("communicationCOM.port_name:%s", communicationCOM.port_name.data());
+    // LOGE_HIGH("communicationCOM.port_name:%s", communicationCOM.port_name.data());
+
+    QDomElement bookElement4 = bookNodeList.at(3).toElement();
+    plcIPAddress = bookElement4.attribute("plc_ip", "");
+    DB_No = bookElement4.attribute("DB_No", "").toInt();
+    LOGE_HIGH("plcIPAddress:%s", plcIPAddress.toStdString().data());
+    LOGE_HIGH("DB_No:%d", DB_No);
 
     return rt;
 }
@@ -983,6 +992,10 @@ bool MainWindow::writeCommunicationPara()
     job_element3.setAttribute("port_name", communicationCOM.port_name.data()); //方式一：创建属性  其中键值对的值可以是各种类型
     root.appendChild(job_element3);
 
+    QDomElement job_element4 = doc.createElement("communticationPLC_config"); //一级子元素
+    job_element4.setAttribute("plc_ip", plcIPAddress); //方式一：创建属性  其中键值对的值可以是各种类型
+    job_element4.setAttribute("DB_No", DB_No);//方式一：创建属性  其中键值对的值可以是各种类型
+    root.appendChild(job_element4);
 
     QTextStream out_stream(&file); //输出到文件
     doc.save(out_stream, 2); //缩进4格
@@ -1425,7 +1438,7 @@ void MainWindow::reset_data()
     jobmanager.ok_count = 0;
     jobmanager.ng_count = 0;
     //控件复原
-    ui->label_result->setStyleSheet("QLabel{color:rgb(128,128,128);}");
+    ui->label_result->setStyleSheet("QLabel{color:rgb(128,128,128);font: 700 56pt;}");
     ui->label_result->setText("--");
     ui->label_time->setText("--------------------");
     update_count_view();
@@ -2086,14 +2099,14 @@ void MainWindow::job_result_output(int work_id)
             update_count_view();
             if(rt)
             {
-                ui->label_result->setStyleSheet("QLabel{color:rgb(0,255,0);font: 700 28pt \"Microsoft YaHei UI\";}");
+                ui->label_result->setStyleSheet("QLabel{color:rgb(0,255,0);font: 700 56pt \"Microsoft YaHei UI\";}");
                 ui->label_result->setText("OK");
                 QDateTime currentDateTime = QDateTime::currentDateTime();
                 ui->label_time->setText(currentDateTime.toString("yyyy-MM-dd hh:mm:ss"));
             }
             else
             {
-                ui->label_result->setStyleSheet("QLabel{color:rgb(255,0,0);font: 700 28pt \"Microsoft YaHei UI\";}");
+                ui->label_result->setStyleSheet("QLabel{color:rgb(255,0,0);font: 700 56pt \"Microsoft YaHei UI\";}");
                 ui->label_result->setText("NG");
                 QDateTime currentDateTime = QDateTime::currentDateTime();
                 ui->label_time->setText(currentDateTime.toString("yyyy-MM-dd hh:mm:ss"));
@@ -2113,6 +2126,44 @@ void MainWindow::job_result_output(int work_id)
             char tmp_info[256];
             sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,%f,", jobmanager.dist);
             communication.tcp_send(tmp_info);
+
+
+            //发给plc
+            {
+                int offset, val;
+                offset = 5;      //工位2结果输出位置为4，这里输到低通道就是5.
+                if(jobmanager.result())
+                {
+                    val = 1;
+                }
+                else
+                {
+                    val = 2;
+                }
+
+
+                LOGE("start Write to DB %d.DBB%d :%d", DB_No, offset, val);
+                if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+                {
+                    int res = plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
+                    LOGE("WriteInt rt :%d", res);
+
+                }
+            }
+            {
+                int offset;
+                float val;
+                offset = 6;  //工位2结果输出位置为6，这里输到6.
+                val = jobmanager.dist;
+                LOGE("start Write to DB %d.DBB%d :%f", DB_No, offset, val);
+                if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+                {
+                    int res = plcSiemens->WriteValue(plcSiemens->eReal, DB_No, offset, &val);
+
+                    LOGE("WriteFloat rt :%d", res);
+
+                }
+            }
         }
 
     }
@@ -3057,5 +3108,39 @@ void MainWindow::on_pushButton_sim_2_clicked(bool checked)
     }
 
 
+}
+
+
+void MainWindow::on_pushButton_sim_3_clicked(bool checked)
+{
+    if(checked)
+    {
+        int offset, val;
+        offset = 5;      //工位2结果输出位置为4，这里输到低通道就是5.
+        val = 1;
+        LOGE("start Write to DB %d.DBB%d :%d", DB_No, offset, val);
+        if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+        {
+            int res = plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
+            LOGE("WriteInt rt :%d", res);
+
+        }
+
+    }
+    else
+    {
+        int offset;
+        float val;
+        offset = 6;  //工位2结果输出位置为6，这里输到6.
+        val = 9.999;
+        LOGE("start Write to DB %d.DBB%d :%f", DB_No, offset, val);
+        if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+        {
+            int res = plcSiemens->WriteValue(plcSiemens->eReal, DB_No, offset, &val);
+
+            LOGE("WriteFloat rt :%d", res);
+
+        }
+    }
 }
 

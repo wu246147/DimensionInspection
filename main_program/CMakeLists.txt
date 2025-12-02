@@ -39,6 +39,9 @@ file(GLOB OPENCV_LIBS "${LIB_DIR}/opencv/*.lib")
 include_directories(${PROJECT_SOURCE_DIR}/../include/algorithm)
 file(GLOB ALGORITHM_LIBS "${LIB_DIR}/algorithm/*.lib")
 
+#s7
+# include_directories(${PROJECT_SOURCE_DIR}/../include/S7)
+file(GLOB S7_LIBS "${LIB_DIR}/S7/*.lib")
 
 add_executable(DimensionInspection
     main.cpp
@@ -90,12 +93,18 @@ add_executable(DimensionInspection
     tool/projecttool.h
     tool/communicationcom.cpp
     tool/communicationcom.h
+
+    #S7通讯
+    tool/plc_siemens.cpp
+    tool/plc_siemens.h
+    tool/snap7.cpp
+    tool/snap7.h
   )
 
 message(ALGORITHM_LIBS:${ALGORITHM_LIBS})
 
 target_link_libraries(DimensionInspection Qt5::Widgets Qt5::Xml Qt5::Concurrent Qt5::Network Qt5::SerialBus Qt5::SerialPort)
-target_link_libraries(DimensionInspection ${BOOST_LIBS} ${OPENCV_LIBS} ${ALGORITHM_LIBS})
+target_link_libraries(DimensionInspection ${BOOST_LIBS} ${OPENCV_LIBS} ${ALGORITHM_LIBS} ${S7_LIBS})
 
 # 文件打包
 file(COPY ${PROJECT_SOURCE_DIR}/qss DESTINATION ${PROJECT_BINARY_DIR})
