@@ -47,56 +47,29 @@ public slots:
 signals:
 
     ///
-    /// \brief checkCamSignal
-    /// \param cam_id
+    /// \brief checkCamSignal 触发运行
+    /// \param cam_id   相机id
+    /// \param fileName 作业名称
     ///
-    void checkCamSignal(int cam_id);
-
-    ///
-    /// \brief focusingSignal
-    /// \param cam_id
-    ///
-    void focusingSignal(int cam_id);
-
-    ///
-    /// \brief calibrationSignal
-    /// \param cam_id
-    /// \param robotX
-    /// \param robotY
-    ///
-    void calibrationSignal(int cam_id, float robotX, float robotY);
-
+    void checkCamSignal(int cam_id, int work_id, std::string fileName);
 
 
     ///
-    /// \brief changeDisplaySignal
-    /// \param cam_id
+    /// \brief calibrationSignal 触发标定
+    /// \param cam_id   相机id
+    /// \param robotX   机器人当前X坐标
+    /// \param robotY   机器人当前Y坐标
+    /// \param robotZ   机器人当前Z坐标
+    /// \param robotRX   机器人当前RX坐标
+    /// \param robotRY   机器人当前RY坐标
+    /// \param robotRZ   机器人当前RZ坐标
     ///
-    void changeDisplaySignal(int cam_id);
+    void calibrationSignal(float robotX, float robotY, float robotZ,
+                           float robotRX, float robotRY, float robotRZ);
 
-    ///
-    /// \brief changeShowModeSignal
-    /// \param isShowForm
-    ///
-    void changeShowModeSignal(bool isShowForm);
 
-    ///
-    /// \brief changeRunModelSignal
-    /// \param isAutoMode
-    ///
-    void changeRunModelSignal(int camid, bool isAutoMode);
 
-    ///
-    /// \brief changeRunModelSignal
-    /// \param isAutoMode
-    ///
-    void changeCenterLineDistSignal(int camid, int centerDist);
 
-    ///
-    /// \brief changeFileSignal
-    /// \param fileName
-    ///
-    void changeFileSignal(std::string fileName);
 
 public:
     ///

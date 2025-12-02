@@ -36,6 +36,9 @@ public:
 
     std::vector<float>robotPoints;
 
+public slots:
+    void calibrationCam(float robotX, float robotY, float robotZ,
+                        float robotRX, float robotRY, float robotRZ);
 
 private slots:
     void on_pushButton_acq_clicked();

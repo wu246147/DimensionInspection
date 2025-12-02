@@ -769,7 +769,9 @@ int JobManager::checkCam(int cam_id, int worker_id)
         LOGE_PROFESSIONAL("cam%d not init", cam_id);
         return -1;
     }
-    LOGE_PROFESSIONAL("cam%d worker%d TriggerSoftware", cam_id, worker_id);
+
+    //取像
+    LOGE_PROFESSIONAL("cam%d TriggerSoftware", cam_id);
 
     cams[cam_id].worker_id = worker_id;
 

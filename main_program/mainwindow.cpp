@@ -439,12 +439,16 @@ MainWindow::MainWindow(QWidget *parent)
     reg_jobover_event();
     reg_jobstart_event();
     reg_update_display_img_event();
-    regSendImagePixelEvent();
+
+    //机器人通讯事件
+    // regSendImagePixelEvent();
     regCheckCamEvent();
-    regChangeDisplayEvent();
-    regChangeRunModelEvent();
-    regChangeShowModeEvent();
-    regChangeFileEvent();
+    // regChangeDisplayEvent();
+    // regChangeRunModelEvent();
+    // regChangeShowModeEvent();
+    // regChangeFileEvent();
+
+
     connect(this, &MainWindow::destroyed, this, &MainWindow::dispose_slot);
     connect(this, &MainWindow::add_log_signal, this, &MainWindow::add_log_even);
     connect(this, &MainWindow::clean_log_signal, this, &MainWindow::clean_log_even);
@@ -461,10 +465,13 @@ MainWindow::MainWindow(QWidget *parent)
     LOGE_HIGH("MainWindow finish tcp init")
     //机器人通讯
     std::string msg;
-    // LOGE_HIGH("communicationModbus.plc_ip:%s", communicationModbus.plc_ip.data());
-    // LOGE_HIGH("communicationModbus.net_port:%d", communicationModbus.net_port);
+    LOGE_HIGH("communicationModbus.plc_ip:%s", communicationModbus.plc_ip.data());
+    LOGE_HIGH("communicationModbus.net_port:%d", communicationModbus.net_port);
 
     communicationModbus.modbusConnect(communicationModbus.plc_ip, communicationModbus.net_port, msg);
+
+    LOGE_HIGH("msg:%s", msg.data());
+
     communicationCOM.connect();
     //模式
     set_work_mode_type(work_mode_type::hand_mode);
@@ -488,8 +495,131 @@ MainWindow::MainWindow(QWidget *parent)
     LOGE_HIGH("MainWindow finish init")
 
     // ui->action_calibration->setVisible(false);
+
+
+
 }
 
+
+void MainWindow::runThread()
+{
+    // std::string msg;
+    // bool rt;
+
+    LOGE("heartBeatThread start")
+    // rt  = communicationModbus.writeInt(1, 51, QModbusDataUnit::Coils, 0, msg);
+    // LOGE("msg：%s", msg.data());
+
+    while(isRunning)
+    {
+        try
+        {
+            //等待机器人触发信号
+            QThread::msleep(100);
+
+            QMetaObject::invokeMethod(this, "robotGrab",  Qt::QueuedConnection);
+
+        }
+        catch(cv::Exception &e)
+        {
+            LOGE("error:%s", e.what());
+        }
+        catch(std::exception &e)
+        {
+            LOGE("error:%s", e.what());
+
+        }
+        catch(QException &e)
+        {
+            LOGE("error:%s", e.what());
+
+        }
+        catch(...)
+        {
+            LOGE("other error.");
+        }
+    }
+}
+
+void MainWindow::robotGrab()
+{
+    //这个只是用来做一下demo，实际应用不合适，因为把操作和等待都放到主线程进行了。
+    std::string msg;
+    bool rt;
+
+    if(isProcessingModbus)
+    {
+        return;
+    }
+    //读取取像信号
+    int value = -1;
+    rt  = communicationModbus.readInt(1, 28, QModbusDataUnit::DiscreteInputs, value, msg);
+    // LOGE("msg: %s", msg.data());
+    // LOGE("value: %d", value);
+
+    if(value != 1)
+    {
+        return;
+    }
+
+    isProcessingModbus = true;
+
+    LOGE("reserve grab")
+
+    //读取取像相机号
+
+    int workerID = -1;
+    rt  = communicationModbus.readInt(1, 29, QModbusDataUnit::DiscreteInputs, workerID, msg);
+    LOGE("msg：%s", msg.data());
+
+
+
+    LOGE("workerID: %d", workerID)
+
+    //取像
+    jobmanager.checkCam(0, workerID);
+
+    LOGE("finish checkCam")
+
+    QThread::msleep(100);
+    //发送取像完成信号
+    rt  = communicationModbus.writeInt(1, 51, QModbusDataUnit::Coils, 1, msg);
+    LOGE("msg：%s", msg.data());
+
+    LOGE("send finish checkCam")
+
+    //等待取像信号结束
+    int wait_count = 30;
+    int cumulative_count = 0;
+    while(1)
+    {
+        int value = -1;
+        rt  = communicationModbus.readInt(1, 28, QModbusDataUnit::DiscreteInputs, value, msg);
+
+        if(value == 0)
+        {
+            break;
+        }
+        QThread::msleep(100);
+        cumulative_count += 1;
+        if(cumulative_count >= wait_count)
+        {
+            // std::cout << "没有收到取像结束信号" << std::endl;
+            LOGE("not reserve cam end finish signal");
+            break;
+        }
+    }
+
+    LOGE("get finish grab")
+
+    //关闭取像完成信号
+    rt  = communicationModbus.writeInt(1, 51, QModbusDataUnit::Coils, 0, msg);
+    LOGE("msg：%s", msg.data());
+
+    LOGE("send end finish checkCam")
+
+    isProcessingModbus = false;
+}
 
 
 MainWindow::~MainWindow()
@@ -681,7 +811,7 @@ void MainWindow::do_after_loadfile()
     reg_jobover_event();
     reg_jobstart_event();
     reg_update_display_img_event();
-    regSendImagePixelEvent();
+    // regSendImagePixelEvent();
     // regCheckCamEvent();
     // regChangeDisplayEvent();
     // regChangeRunModelEvent();
@@ -1178,7 +1308,7 @@ void MainWindow::remove_update_display_img_event()
 void MainWindow::regCheckCamEvent()
 {
     removeCheckCamEvent();
-    // connect(&communication, &Communication::checkCamSignal, &jobmanager, &JobManager::checkCam);
+    connect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
     // connect(&communication, &Communication::focusingSignal, &jobmanager, &JobManager::focusingCam);
     // connect(&communication, &Communication::calibrationSignal, &jobmanager, &JobManager::calibrationCam);
     //仿真测试
@@ -1188,73 +1318,73 @@ void MainWindow::regCheckCamEvent()
 
 void MainWindow::removeCheckCamEvent()
 {
-    // disconnect(&communication, &Communication::checkCamSignal, &jobmanager, &JobManager::checkCam);
+    disconnect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
     // disconnect(&communication, &Communication::focusingSignal, &jobmanager, &JobManager::focusingCam);
     // disconnect(&communication, &Communication::calibrationSignal, &jobmanager, &JobManager::calibrationCam);
     // disconnect(&communication, &Communication::calibrationSignal, this, &MainWindow::calibrationCamTest);
 
 }
 
-void MainWindow::regChangeDisplayEvent()
-{
-    removeChangeDisplayEvent();
-    connect(&communication, &Communication::changeDisplaySignal, this, &MainWindow::changeDisplayEven);
-}
+// void MainWindow::regChangeDisplayEvent()
+// {
+//     removeChangeDisplayEvent();
+//     connect(&communication, &Communication::changeDisplaySignal, this, &MainWindow::changeDisplayEven);
+// }
 
-void MainWindow::removeChangeDisplayEvent()
-{
-    disconnect(&communication, &Communication::changeDisplaySignal, this, &MainWindow::changeDisplayEven);
-}
+// void MainWindow::removeChangeDisplayEvent()
+// {
+//     disconnect(&communication, &Communication::changeDisplaySignal, this, &MainWindow::changeDisplayEven);
+// }
 
-void MainWindow::regChangeShowModeEvent()
-{
-    removeChangeShowModeEvent();
-    connect(&communication, &Communication::changeShowModeSignal, this, &MainWindow::changeShowModeEven);
-    connect(&communication, &Communication::changeCenterLineDistSignal, this, &MainWindow::changeCenterLineDistEven);
+// void MainWindow::regChangeShowModeEvent()
+// {
+//     removeChangeShowModeEvent();
+//     connect(&communication, &Communication::changeShowModeSignal, this, &MainWindow::changeShowModeEven);
+//     connect(&communication, &Communication::changeCenterLineDistSignal, this, &MainWindow::changeCenterLineDistEven);
 
-}
+// }
 
-void MainWindow::removeChangeShowModeEvent()
-{
-    disconnect(&communication, &Communication::changeShowModeSignal, this, &MainWindow::changeShowModeEven);
-    disconnect(&communication, &Communication::changeCenterLineDistSignal, this, &MainWindow::changeCenterLineDistEven);
+// void MainWindow::removeChangeShowModeEvent()
+// {
+//     disconnect(&communication, &Communication::changeShowModeSignal, this, &MainWindow::changeShowModeEven);
+//     disconnect(&communication, &Communication::changeCenterLineDistSignal, this, &MainWindow::changeCenterLineDistEven);
 
-}
+// }
 
-void MainWindow::regChangeRunModelEvent()
-{
-    removeChangeRunModelEvent();
-    connect(&communication, &Communication::changeRunModelSignal, this, &MainWindow::changeRunModelEven);
-}
+// void MainWindow::regChangeRunModelEvent()
+// {
+//     removeChangeRunModelEvent();
+//     connect(&communication, &Communication::changeRunModelSignal, this, &MainWindow::changeRunModelEven);
+// }
 
-void MainWindow::removeChangeRunModelEvent()
-{
-    disconnect(&communication, &Communication::changeRunModelSignal, this, &MainWindow::changeRunModelEven);
-}
+// void MainWindow::removeChangeRunModelEvent()
+// {
+//     disconnect(&communication, &Communication::changeRunModelSignal, this, &MainWindow::changeRunModelEven);
+// }
 
-void MainWindow::regChangeFileEvent()
-{
-    removeChangeFileEvent();
-    connect(&communication, &Communication::changeFileSignal, this, &MainWindow::changeFileEven);
-}
+// void MainWindow::regChangeFileEvent()
+// {
+//     removeChangeFileEvent();
+//     connect(&communication, &Communication::changeFileSignal, this, &MainWindow::changeFileEven);
+// }
 
-void MainWindow::removeChangeFileEvent()
-{
-    disconnect(&communication, &Communication::changeFileSignal, this, &MainWindow::changeFileEven);
-}
+// void MainWindow::removeChangeFileEvent()
+// {
+//     disconnect(&communication, &Communication::changeFileSignal, this, &MainWindow::changeFileEven);
+// }
 
-void MainWindow::regSendImagePixelEvent()
-{
-    removeSendImagePixelEvent();
-    connect(jobmanager.jobworkers[0].display->myGraphicsView, &MyGraphicsView::show_click_point_signals, this, &MainWindow::sendImagePixelEven1);
-    connect(jobmanager.jobworkers[1].display->myGraphicsView, &MyGraphicsView::show_click_point_signals, this, &MainWindow::sendImagePixelEven2);
-}
+// void MainWindow::regSendImagePixelEvent()
+// {
+//     removeSendImagePixelEvent();
+//     connect(jobmanager.jobworkers[0].display->myGraphicsView, &MyGraphicsView::show_click_point_signals, this, &MainWindow::sendImagePixelEven1);
+//     connect(jobmanager.jobworkers[1].display->myGraphicsView, &MyGraphicsView::show_click_point_signals, this, &MainWindow::sendImagePixelEven2);
+// }
 
-void MainWindow::removeSendImagePixelEvent()
-{
-    disconnect(jobmanager.jobworkers[0].display->myGraphicsView, &MyGraphicsView::show_click_point_signals, this, &MainWindow::sendImagePixelEven1);
-    disconnect(jobmanager.jobworkers[1].display->myGraphicsView, &MyGraphicsView::show_click_point_signals, this, &MainWindow::sendImagePixelEven2);
-}
+// void MainWindow::removeSendImagePixelEvent()
+// {
+//     disconnect(jobmanager.jobworkers[0].display->myGraphicsView, &MyGraphicsView::show_click_point_signals, this, &MainWindow::sendImagePixelEven1);
+//     disconnect(jobmanager.jobworkers[1].display->myGraphicsView, &MyGraphicsView::show_click_point_signals, this, &MainWindow::sendImagePixelEven2);
+// }
 
 void MainWindow::reset_data()
 {
@@ -1972,7 +2102,18 @@ void MainWindow::job_result_output(int work_id)
 
         }
         //结果输出
-
+        if(work_id == 0)
+        {
+            char tmp_info[256];
+            sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,0,");
+            communication.tcp_send(tmp_info);
+        }
+        else
+        {
+            char tmp_info[256];
+            sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,%f,", jobmanager.dist);
+            communication.tcp_send(tmp_info);
+        }
 
     }
     catch(cv::Exception &e)
@@ -2243,6 +2384,9 @@ void MainWindow::on_action_auto_mode_triggered(bool checked)
         LOGE_HIGH("切换到自动模式");
     }
 }
+
+
+
 
 void MainWindow::on_action_hand_mode_triggered(bool checked)
 {
@@ -2581,10 +2725,10 @@ void MainWindow::on_action_calibration_triggered()
         // LOGE_HIGH("11");
 
         // 加载接收触发事件
-        // connect(&communication, &Communication::calibrationSignal, dialog, &DialogCalibration::calibrationCam);
+        connect(&communication, &Communication::calibrationSignal, dialog, &DialogRobotAcq::calibrationCam);
         // dialog->exec();
         dialog->show();
-        // disconnect(&communication, &Communication::calibrationSignal, dialog, &DialogCalibration::calibrationCam);
+        disconnect(&communication, &Communication::calibrationSignal, dialog, &DialogRobotAcq::calibrationCam);
         // LOGE_HIGH("22");
 
     }
@@ -2820,6 +2964,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
         communication.tcp_server_dispose();
         LOGE("222");
 
+
+        //关闭心跳
+        isRunning = false;
+        runFut.waitForFinished();
+        LOGE("heartBeat thread close");
+
         //关闭机器人通讯
         communicationModbus.modbusDisconnect();
         LOGE("333");
@@ -2860,6 +3010,52 @@ void MainWindow::on_pushButton_correction_clicked()
         return;
     }
     double real_value = ui->doubleSpinBox_real_value->value();
-    jobmanager.k = real_value / jobmanager.dist;
+    jobmanager.k = real_value / (jobmanager.dist / jobmanager.k);
+}
+
+int MainWindow::changeFileAndCheckCam(int cam_id, int worker_id, std::string fileName)
+{
+    //切换作业
+    if(job_name.toStdString().compare(fileName) != 0)
+    {
+        changeFile(fileName);
+    }
+    //取像运行
+    //开灯
+    communicationCOM.serial->write("SB0255#");
+    QThread::msleep(10);
+
+    int r = jobmanager.checkCam(cam_id, worker_id);
+
+    //关灯
+    int sleepTime = jobmanager.cams[0].exposure_time / 1000;
+    sleepTime += 10;
+    QThread::msleep(sleepTime);
+    communicationCOM.serial->write("SB0000#");
+
+
+}
+
+
+void MainWindow::on_pushButton_sim_2_clicked(bool checked)
+{
+
+
+    if(checked)
+    {
+        //运行线程开启
+        isRunning = true;
+        runFut = QtConcurrent::run(this, &MainWindow::runThread);
+        LOGE("run thread start");
+
+    }
+    else
+    {
+        //运行线程停止
+        isRunning = false;
+        runFut.waitForFinished();
+    }
+
+
 }
 

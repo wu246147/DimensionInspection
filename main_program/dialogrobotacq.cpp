@@ -24,6 +24,30 @@ DialogRobotAcq::DialogRobotAcq(JobManager *j, CommunicationModbus *c, COM *com, 
     communicationCOM = com;
 }
 
+void DialogRobotAcq::calibrationCam(float robotX, float robotY, float robotZ, float robotRX, float robotRY, float robotRZ)
+{
+    //图像采集
+    on_pushButton_acq_clicked();
+
+    //数据记录
+    robotPoints.clear();
+    robotPoints.push_back(robotX);
+    robotPoints.push_back(robotY);
+    robotPoints.push_back(robotZ);
+    robotPoints.push_back(robotRX);
+    robotPoints.push_back(robotRY);
+    robotPoints.push_back(robotRZ);
+
+    //更新界面
+    ui->doubleSpinBox_calib_robotX->setValue(robotPoints[0]);
+    ui->doubleSpinBox_calib_robotY->setValue(robotPoints[1]);
+    ui->doubleSpinBox_calib_robotZ->setValue(robotPoints[2]);
+    ui->doubleSpinBox_calib_robotRX->setValue(robotPoints[3]);
+    ui->doubleSpinBox_calib_robotRY->setValue(robotPoints[4]);
+    ui->doubleSpinBox_calib_robotRZ->setValue(robotPoints[5]);
+
+}
+
 void DialogRobotAcq::on_pushButton_acq_clicked()
 {
     //开灯

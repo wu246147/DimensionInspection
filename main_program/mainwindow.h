@@ -64,6 +64,14 @@ public:
 
     int cam_id = 0;
 
+    // 运行线程
+    bool isRunning = true;
+    QFuture<void> runFut;
+
+    void runThread();
+
+
+
     // 作业
 
     ///
@@ -203,55 +211,57 @@ public:
     ///
     void removeCheckCamEvent();
 
-    ///
-    /// \brief regChangeDisplayEvent 部署切换显示窗口事件
-    ///
-    void regChangeDisplayEvent();
+    // ///
+    // /// \brief regChangeDisplayEvent 部署切换显示窗口事件
+    // ///
+    // void regChangeDisplayEvent();
 
-    ///
-    /// \brief removeChangeDisplayEvent 清除切换显示窗口事件
-    ///
-    void removeChangeDisplayEvent();
+    // ///
+    // /// \brief removeChangeDisplayEvent 清除切换显示窗口事件
+    // ///
+    // void removeChangeDisplayEvent();
 
-    ///
-    /// \brief regChangeShowModeEvent 部署切换显示模式事件
-    ///
-    void regChangeShowModeEvent();
+    // ///
+    // /// \brief regChangeShowModeEvent 部署切换显示模式事件
+    // ///
+    // void regChangeShowModeEvent();
 
-    ///
-    /// \brief removeChangeShowModeEvent 清除切换显示模式事件
-    ///
-    void removeChangeShowModeEvent();
+    // ///
+    // /// \brief removeChangeShowModeEvent 清除切换显示模式事件
+    // ///
+    // void removeChangeShowModeEvent();
 
-    ///
-    /// \brief regChangeRunModelEvent 部署切换运行模式事件
-    ///
-    void regChangeRunModelEvent();
+    // ///
+    // /// \brief regChangeRunModelEvent 部署切换运行模式事件
+    // ///
+    // void regChangeRunModelEvent();
 
-    ///
-    /// \brief removeChangeRunModelEvent 清除切换运行模式事件
-    ///
-    void removeChangeRunModelEvent();
+    // ///
+    // /// \brief removeChangeRunModelEvent 清除切换运行模式事件
+    // ///
+    // void removeChangeRunModelEvent();
 
-    ///
-    /// \brief regChangeFileEvent 部署切换作业事件
-    ///
-    void regChangeFileEvent();
+    // ///
+    // /// \brief regChangeFileEvent 部署切换作业事件
+    // ///
+    // void regChangeFileEvent();
 
-    ///
-    /// \brief removeChangeFileEvent 清除切换作业事件
-    ///
-    void removeChangeFileEvent();
+    // ///
+    // /// \brief removeChangeFileEvent 清除切换作业事件
+    // ///
+    // void removeChangeFileEvent();
 
-    ///
-    /// \brief regChangeFileEvent 部署切换作业事件
-    ///
-    void regSendImagePixelEvent();
+    // ///
+    // /// \brief regChangeFileEvent 部署切换作业事件
+    // ///
+    // void regSendImagePixelEvent();
 
-    ///
-    /// \brief removeChangeFileEvent 清除切换作业事件
-    ///
-    void removeSendImagePixelEvent();
+    // ///
+    // /// \brief removeChangeFileEvent 清除切换作业事件
+    // ///
+    // void removeSendImagePixelEvent();
+
+
 
     ///
     /// \brief reset_data 重置数据函数
@@ -510,6 +520,14 @@ private slots:
 
     void on_pushButton_correction_clicked();
 
+    int changeFileAndCheckCam(int cam_id, int worker_id, std::string fileName);
+
+
+    void on_pushButton_sim_2_clicked(bool checked);
+
+    void robotGrab();
+
+
 signals:
 
     ///
@@ -585,11 +603,15 @@ private:
 
     //整个作业管理对象
     JobManager jobmanager;
-    //通讯管理对象
-    Communication communication;
 
     //机器人通讯管理对象
     CommunicationModbus communicationModbus;
+    //判断线程是否正在处理
+    bool isProcessingModbus = false;
+
+    //机器人2通讯管理对象
+    Communication communication;
+
 
     //光源通讯管理对象
     COM communicationCOM;

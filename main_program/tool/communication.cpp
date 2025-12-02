@@ -86,138 +86,35 @@ void Communication::tcp_ready_read()
         LOGE("receive tcp:%s", info.toStdString().data());
         // std::cout <<  << std::endl;
         QStringList infoList = info.split(',');
-        LOGE_HIGH("receive infoList len:%d", infoList.length());
-        foreach(auto info_item, infoList)
+
+        if(infoList[7].toInt() == 1)
         {
-            LOGE_HIGH("info_item:%s", info_item.toStdString().data());
+            //运行
+            checkCamSignal(infoList[7].toInt(), infoList[8].toInt(), infoList[6].toStdString());
+
+
         }
-        //添加通讯逻辑
-        if(infoList[0].startsWith("T"))
+        else if(infoList[7].toInt() == 3)
         {
-            LOGE_HIGH("start change mode");
-            //手动定位
-            if(infoList[1].compare("S") == 0)
-            {
-                LOGE_HIGH("start change mode");
+            //标定
+            calibrationSignal(infoList[0].toDouble(),
+                              infoList[1].toDouble(),
+                              infoList[2].toDouble(),
+                              infoList[3].toDouble(),
+                              infoList[4].toDouble(),
+                              infoList[5].toDouble());
 
-                if(infoList[2].compare("0") == 0)
-                {
-                    // isAutoMode = true;
-                    changeRunModelSignal(infoList[0].mid(1, 1).toInt() - 1, true);
-                }
-                else if(infoList[2].compare("1") == 0)
-                {
-                    // isAutoMode = false;
-                    changeRunModelSignal(infoList[0].mid(1, 1).toInt() - 1, false);
-                }
+            //返回结果
+            tcp_send("0,0,0,0,0,0,0,0,0,0,0,0,1,");
+            // m_tcpSocket->write((info + "\n").data());
 
-
-                //结果发送
-                std::string info = "T" + infoList[0].mid(1, 1).toStdString() + ",S," + infoList[2].toStdString() + ",0\r";
-                tcp_send(info);
-            }
-            else if(infoList[1].compare("DIS") == 0)
-            {
-                LOGE_HIGH("set centerLine distance");
-
-                changeCenterLineDistSignal(infoList[0].mid(1, 1).toInt() - 1,
-                                           infoList[2].toInt());
-
-            }
-            else if(infoList[1].compare("AF") == 0)
-            {
-                //先关掉实时
-                changeRunModelSignal(infoList[0].mid(1, 1).toInt() - 1, true);
-                //定位
-                if(infoList[0].mid(1, 1).compare("1") == 0)
-                {
-                    LOGE_HIGH("focusing cam 1");
-
-                    focusingSignal(0);
-                }
-                else if(infoList[0].mid(1, 1).compare("2") == 0)
-                {
-                    LOGE_HIGH("focusing cam 2");
-
-                    focusingSignal(1);
-                }
-            }
-            else
-            {
-                LOGE_HIGH("start check cam");
-                if(infoList.size() == 4)
-                {
-                    //先关掉实时
-                    changeRunModelSignal(infoList[0].mid(1, 1).toInt() - 1, true);
-                    //自动标定
-                    if(infoList[0].mid(1, 1).compare("1") == 0)
-                    {
-                        calibrationSignal(0, infoList[2].toFloat(), infoList[3].toFloat());
-                    }
-                    else if(infoList[0].mid(1, 1).compare("2") == 0)
-                    {
-                        calibrationSignal(1, infoList[2].toFloat(), infoList[3].toFloat());
-                    }
-                }
-                else
-                {
-                    //先关掉实时
-                    changeRunModelSignal(infoList[0].mid(1, 1).toInt() - 1, true);
-                    //定位
-                    if(infoList[0].mid(1, 1).compare("1") == 0)
-                    {
-                        LOGE_HIGH("check cam 1");
-
-                        checkCamSignal(0);
-                    }
-                    else if(infoList[0].mid(1, 1).compare("2") == 0)
-                    {
-                        LOGE_HIGH("check cam 2");
-
-                        checkCamSignal(1);
-                    }
-                }
-
-            }
         }
-        //切换display
-        else if(infoList[0].compare("SWC") == 0)
+        else
         {
-            LOGE_HIGH("start change Display");
-            int tmp_cam_id =  infoList[1].toInt() - 1;
-            changeDisplaySignal(tmp_cam_id);
-            std::string info = "SWC," + infoList[1].toStdString() + ",0\r";
-            tcp_send(info);
+            LOGE("not have this Instruction:%d", infoList[7].toInt());
+
         }
-        //切换模式
-        else if(infoList[0].compare("SWM") == 0)
-        {
-            //先关掉实时
-            changeRunModelSignal(0, true);
-            changeRunModelSignal(1, true);
-            QThread::msleep(500);
-            LOGE_HIGH("start change show Model");
-            if(infoList[1].compare("R") == 0)
-            {
-                changeShowModeSignal(true);
-            }
-            else
-            {
-                changeShowModeSignal(false);
-            }
-            std::string info = "SWM," + infoList[1].toStdString() + ",0\r";
-            tcp_send(info);
-        }
-        //切换作业
-        else if(infoList[0].compare("SWP") == 0)
-        {
-            //先关掉实时
-            changeRunModelSignal(0, true);
-            changeRunModelSignal(1, true);
-            QThread::msleep(500);
-            LOGE_HIGH("start change File");
-            changeFileSignal(infoList[1].toStdString());
-        }
+
         LOGE_HIGH("finish tcp process");
     }
     catch(std::exception &e)

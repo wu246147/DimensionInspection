@@ -58,14 +58,14 @@ bool CommunicationModbus::readInt(int serverAddress, int address, QModbusDataUni
 
         if(reply->error() == QModbusDevice::NoError)
         {
-            msg = ("读取成功\r\n");
+            msg = ("read success\r\n");
             rt = true;
             const QModbusDataUnit data = reply->result();
             value = data.value(0);
         }
         else
         {
-            msg = ("读取错误" + reply->errorString() + "\r\n").toStdString();
+            msg = ("read fail" + reply->errorString() + "\r\n").toStdString();
 
         }
         reply->deleteLater();
@@ -73,7 +73,7 @@ bool CommunicationModbus::readInt(int serverAddress, int address, QModbusDataUni
     }
     else
     {
-        msg = ("请求发送失败：" + modbusClient->errorString()).toStdString();
+        msg = ("request fail:" + modbusClient->errorString()).toStdString();
     }
 
     return rt;
@@ -99,12 +99,12 @@ bool CommunicationModbus::writeInt(int serverAddress, int address, QModbusDataUn
         if(reply->error() == QModbusDevice::NoError)
         {
             rt = true;
-            msg += "写入成功！\r\n";
+            msg += "write success\r\n";
         }
         else
         {
 
-            msg += ("写入错误：" + reply->errorString() + "\r\n").toStdString();
+            msg += ("write fail" + reply->errorString() + "\r\n").toStdString();
 
         }
         reply->deleteLater();
@@ -113,7 +113,7 @@ bool CommunicationModbus::writeInt(int serverAddress, int address, QModbusDataUn
     }
     else
     {
-        msg += "写入请求失败";
+        msg += "request fail";
     }
     return rt;
 }
@@ -139,7 +139,7 @@ bool CommunicationModbus::readFloat(int serverAddress, int address, QModbusDataU
 
         if(reply->error() == QModbusDevice::NoError)
         {
-            msg += ("读取成功\r\n");
+            msg += ("read success\r\n");
             rt = true;
             const QModbusDataUnit data = reply->result();
             // value = data.value(0);
@@ -153,7 +153,7 @@ bool CommunicationModbus::readFloat(int serverAddress, int address, QModbusDataU
         }
         else
         {
-            msg += ("读取错误" + reply->errorString() + "\r\n").toStdString();
+            msg += ("read fail" + reply->errorString() + "\r\n").toStdString();
 
         }
         reply->deleteLater();
@@ -161,7 +161,7 @@ bool CommunicationModbus::readFloat(int serverAddress, int address, QModbusDataU
     }
     else
     {
-        msg += ("请求发送失败：" + modbusClient->errorString()).toStdString();
+        msg += ("request fail：" + modbusClient->errorString()).toStdString();
     }
 
     return rt;
@@ -194,7 +194,7 @@ bool CommunicationModbus::writeFloat(int serverAddress, int address, QModbusData
         if(reply->error() == QModbusDevice::NoError)
         {
             rt = true;
-            msg += "写入成功！\r\n";
+            msg += "write success！\r\n";
 
             msg += ("data.value(0):" + std::to_string(high) + "\r\n").data();
             msg += ("data.value(1):" + std::to_string(low) + "\r\n").data();
@@ -203,7 +203,7 @@ bool CommunicationModbus::writeFloat(int serverAddress, int address, QModbusData
         else
         {
 
-            msg += ("写入错误：" + reply->errorString() + "\r\n").toStdString();
+            msg += ("write fail" + reply->errorString() + "\r\n").toStdString();
 
         }
         reply->deleteLater();
@@ -212,7 +212,7 @@ bool CommunicationModbus::writeFloat(int serverAddress, int address, QModbusData
     }
     else
     {
-        msg += "写入请求失败";
+        msg += "request fail";
     }
     return rt;
 }
@@ -234,12 +234,13 @@ bool CommunicationModbus::modbusConnect(std::string ip, int port, std::string &m
     // 2. 连接到服务器
     if(!rt)
     {
-        msg += ("连接失败：" + modbusClient->errorString() +
+        msg += ("connect fail：" + modbusClient->errorString() +
                 "\r\n").toStdString();
         return total_rt;
     }
     else
     {
+        msg += "connect success";
         total_rt = true;
         return total_rt;
     }

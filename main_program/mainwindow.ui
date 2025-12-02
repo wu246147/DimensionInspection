@@ -669,6 +669,47 @@ QPushButton:checked
                   <double>99999.000000000000000</double>
                  </property>
                 </widget>
+                <widget class="QPushButton" name="pushButton_sim_2">
+                 <property name="geometry">
+                  <rect>
+                   <x>220</x>
+                   <y>0</y>
+                   <width>111</width>
+                   <height>61</height>
+                  </rect>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Microsoft YaHei UI</family>
+                   <pointsize>14</pointsize>
+                   <italic>false</italic>
+                   <bold>false</bold>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+    color: rgb(255, 255, 255);
+    background-color: rgb(38, 56, 81);
+border-radius:15px;
+}
+QPushButton:pressed 
+{
+	background-color: rgb(60, 68, 81);
+ }
+
+QPushButton:checked 
+{
+	background-color: rgb(60, 68, 81);
+ }</string>
+                 </property>
+                 <property name="text">
+                  <string>运行</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                </widget>
                </widget>
               </item>
              </layout>
