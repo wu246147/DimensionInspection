@@ -20,7 +20,7 @@ int COM::connect()
         serial->close();
     }
     serial->setPortName(port_name.data());
-    if(serial->open(QIODevice::ReadOnly))
+    if(serial->open(QIODevice::ReadWrite))
     {
         //设置波特率
         serial->setBaudRate(baud_rate);//设置波特率为115200

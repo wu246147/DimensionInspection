@@ -475,6 +475,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     LOGE_HIGH("msg:%s", msg.data());
 
+
+    LOGE_HIGH("communicationCOM.PortName:%s", communicationCOM.port_name.data());
+    LOGE_HIGH("communicationCOM.baud_rate:%d", communicationCOM.baud_rate);
+    LOGE_HIGH("communicationCOM.data_bits:%d", communicationCOM.data_bits);
+    LOGE_HIGH("communicationCOM.stop_bits:%d", communicationCOM.stop_bits);
+
     communicationCOM.connect();
     //模式
     set_work_mode_type(work_mode_type::hand_mode);
@@ -2553,17 +2559,34 @@ void MainWindow::on_pushButton_3_clicked()
 {
     if(m_work_mode_type == work_mode_type::hand_mode)
     {
+
+
         //开灯
-        communicationCOM.serial->write("SB0255#");
-        QThread::msleep(10);
+        communicationCOM.serial->write("SB0255#\r\n");
+        // QThread::msleep(500);
 
-        int r = jobmanager.checkCam(0, 0);
+        // int r = jobmanager.checkCam(0, 0);
 
-        //关灯
-        int sleepTime = jobmanager.cams[0].exposure_time / 1000;
-        sleepTime += 10;
-        QThread::msleep(sleepTime);
-        communicationCOM.serial->write("SB0000#");
+        // //关灯
+        // int sleepTime = jobmanager.cams[0].exposure_time / 1000;
+        // sleepTime += 500;
+        // QThread::msleep(sleepTime);
+        // communicationCOM.serial->write("SB0000#\r\n");
+
+        /*  2. 等待灯真正亮稳（厂家说 500 ms 足够，也可自己改） */
+        QTimer::singleShot(200, this, [this]()
+        {
+            // 3. 取像
+            int r = jobmanager.checkCam(0, 0);
+            Q_UNUSED(r);          // 如果想判断成败，在这里处理
+
+            // 4. 计算曝光时间，再关灯
+            int lightOnTime = jobmanager.cams[0].exposure_time / 1000 + 200;
+            QTimer::singleShot(lightOnTime, this, [this]()
+            {
+                communicationCOM.serial->write("SB0000#\r\n");
+            });
+        });
     }
     else if(m_work_mode_type == work_mode_type::simulation_mode)
     {
@@ -2576,16 +2599,31 @@ void MainWindow::on_pushButton_4_clicked()
     if(m_work_mode_type == work_mode_type::hand_mode)
     {
         //开灯
-        communicationCOM.serial->write("SC0255#");
-        QThread::msleep(10);
+        communicationCOM.serial->write("SC0255#\r\n");
+        // QThread::msleep(500);
 
-        int r = jobmanager.checkCam(0, 1);
+        // int r = jobmanager.checkCam(0, 1);
 
-        //关灯
-        int sleepTime = jobmanager.cams[0].exposure_time / 1000;
-        sleepTime += 10;
-        QThread::msleep(sleepTime);
-        communicationCOM.serial->write("SC0000#");
+        // //关灯
+        // int sleepTime = jobmanager.cams[0].exposure_time / 1000;
+        // sleepTime += 500;
+        // QThread::msleep(sleepTime);
+        // communicationCOM.serial->write("SC0000#\r\n");
+
+        /*  2. 等待灯真正亮稳（厂家说 500 ms 足够，也可自己改） */
+        QTimer::singleShot(200, this, [this]()
+        {
+            // 3. 取像
+            int r = jobmanager.checkCam(0, 1);
+            Q_UNUSED(r);          // 如果想判断成败，在这里处理
+
+            // 4. 计算曝光时间，再关灯
+            int lightOnTime = jobmanager.cams[0].exposure_time / 1000 + 200;
+            QTimer::singleShot(lightOnTime, this, [this]()
+            {
+                communicationCOM.serial->write("SC0000#\r\n");
+            });
+        });
 
     }
     else if(m_work_mode_type == work_mode_type::simulation_mode)
@@ -3075,28 +3113,50 @@ int MainWindow::changeFileAndCheckCam(int cam_id, int worker_id, std::string fil
     //开灯
     if(worker_id == 0)
     {
-        communicationCOM.serial->write("SB0255#");
+        communicationCOM.serial->write("SB0255#\r\n");
     }
     else
     {
-        communicationCOM.serial->write("SC0255#");
+        communicationCOM.serial->write("SC0255#\r\n");
     }
-    QThread::msleep(10);
+    // QThread::msleep(500);
 
-    int r = jobmanager.checkCam(cam_id, worker_id);
+    QTimer::singleShot(200, this, [this, cam_id, worker_id]()
+    {
+        // 3. 取像
+        int r = jobmanager.checkCam(cam_id, worker_id);
+        Q_UNUSED(r);          // 如果想判断成败，在这里处理
 
-    //关灯
-    int sleepTime = jobmanager.cams[cam_id].exposure_time / 1000;
-    sleepTime += 10;
-    QThread::msleep(sleepTime);
-    if(worker_id == 0)
-    {
-        communicationCOM.serial->write("SB0000#");
-    }
-    else
-    {
-        communicationCOM.serial->write("SC0000#");
-    }
+        // 4. 计算曝光时间，再关灯
+        int lightOnTime = jobmanager.cams[cam_id].exposure_time / 1000 + 200;
+        QTimer::singleShot(lightOnTime, this, [this, worker_id]()
+        {
+            if(worker_id == 0)
+            {
+                communicationCOM.serial->write("SB0000#\r\n");
+            }
+            else
+            {
+                communicationCOM.serial->write("SC0000#\r\n");
+            }
+        });
+    });
+
+
+    // int r = jobmanager.checkCam(cam_id, worker_id);
+
+    // //关灯
+    // int sleepTime = jobmanager.cams[cam_id].exposure_time / 1000;
+    // sleepTime += 500;
+    // QThread::msleep(sleepTime);
+    // if(worker_id == 0)
+    // {
+    //     communicationCOM.serial->write("SB0000#\r\n");
+    // }
+    // else
+    // {
+    //     communicationCOM.serial->write("SC0000#\r\n");
+    // }
 
 }
 
@@ -3155,5 +3215,45 @@ void MainWindow::on_pushButton_sim_3_clicked(bool checked)
 
         }
     }
+}
+
+
+void MainWindow::on_pushButton_light1_clicked(bool checked)
+{
+    std::string msg;
+    if(checked)
+    {
+        msg = "SB0255#\r\n";
+        communicationCOM.serial->write(msg.data());
+
+
+    }
+    else
+    {
+        msg = "SB0000#\r\n";
+
+        communicationCOM.serial->write(msg.data());
+    }
+    LOGE("com send info %s", msg.data());
+}
+
+
+void MainWindow::on_pushButton_light2_clicked(bool checked)
+{
+    std::string msg;
+    if(checked)
+    {
+        msg = "SC0255#\r\n";
+        communicationCOM.serial->write(msg.data());
+
+
+    }
+    else
+    {
+        msg = "SC0000#\r\n";
+
+        communicationCOM.serial->write(msg.data());
+    }
+    LOGE("com send info %s", msg.data());
 }
 

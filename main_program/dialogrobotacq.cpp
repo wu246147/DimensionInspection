@@ -51,7 +51,7 @@ void DialogRobotAcq::calibrationCam(float robotX, float robotY, float robotZ, fl
 void DialogRobotAcq::on_pushButton_acq_clicked()
 {
     //开灯
-    communicationCOM->serial->write("SC0255#");
+    communicationCOM->serial->write("SA0255#");
     QThread::msleep(10);
 
     int r = jobmanager->checkCam(0, 0);
@@ -60,7 +60,7 @@ void DialogRobotAcq::on_pushButton_acq_clicked()
     int sleepTime = jobmanager->cams[0].exposure_time / 1000;
     sleepTime += 10;
     QThread::msleep(sleepTime);
-    communicationCOM->serial->write("SC0000#");
+    communicationCOM->serial->write("SA0000#");
 }
 
 

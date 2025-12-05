@@ -530,6 +530,10 @@ private slots:
 
     void on_pushButton_sim_3_clicked(bool checked);
 
+    void on_pushButton_light1_clicked(bool checked);
+
+    void on_pushButton_light2_clicked(bool checked);
+
 signals:
 
     ///

@@ -515,9 +515,9 @@ color: rgb(0, 120, 220);</string>
                  <property name="geometry">
                   <rect>
                    <x>40</x>
-                   <y>140</y>
+                   <y>160</y>
                    <width>111</width>
-                   <height>61</height>
+                   <height>41</height>
                   </rect>
                  </property>
                  <property name="styleSheet">
@@ -540,9 +540,9 @@ QPushButton:checked
                  <property name="geometry">
                   <rect>
                    <x>220</x>
-                   <y>140</y>
+                   <y>160</y>
                    <width>111</width>
-                   <height>61</height>
+                   <height>41</height>
                   </rect>
                  </property>
                  <property name="styleSheet">
@@ -567,7 +567,7 @@ QPushButton:checked
                    <x>40</x>
                    <y>0</y>
                    <width>111</width>
-                   <height>61</height>
+                   <height>41</height>
                   </rect>
                  </property>
                  <property name="font">
@@ -606,9 +606,9 @@ QPushButton:checked
                  <property name="geometry">
                   <rect>
                    <x>40</x>
-                   <y>70</y>
+                   <y>50</y>
                    <width>111</width>
-                   <height>61</height>
+                   <height>41</height>
                   </rect>
                  </property>
                  <property name="font">
@@ -647,7 +647,7 @@ QPushButton:checked
                  <property name="geometry">
                   <rect>
                    <x>170</x>
-                   <y>80</y>
+                   <y>50</y>
                    <width>90</width>
                    <height>45</height>
                   </rect>
@@ -660,7 +660,7 @@ QPushButton:checked
                  <property name="geometry">
                   <rect>
                    <x>270</x>
-                   <y>80</y>
+                   <y>50</y>
                    <width>101</width>
                    <height>45</height>
                   </rect>
@@ -675,7 +675,7 @@ QPushButton:checked
                    <x>220</x>
                    <y>0</y>
                    <width>111</width>
-                   <height>61</height>
+                   <height>41</height>
                   </rect>
                  </property>
                  <property name="font">
@@ -705,6 +705,88 @@ QPushButton:checked
                  </property>
                  <property name="text">
                   <string>运行</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+                <widget class="QPushButton" name="pushButton_light1">
+                 <property name="geometry">
+                  <rect>
+                   <x>40</x>
+                   <y>110</y>
+                   <width>111</width>
+                   <height>41</height>
+                  </rect>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Microsoft YaHei UI</family>
+                   <pointsize>14</pointsize>
+                   <italic>false</italic>
+                   <bold>false</bold>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+    color: rgb(255, 255, 255);
+    background-color: rgb(38, 56, 81);
+border-radius:15px;
+}
+QPushButton:pressed 
+{
+	background-color: rgb(60, 68, 81);
+ }
+
+QPushButton:checked 
+{
+	background-color: rgb(60, 68, 81);
+ }</string>
+                 </property>
+                 <property name="text">
+                  <string>光源1</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+                <widget class="QPushButton" name="pushButton_light2">
+                 <property name="geometry">
+                  <rect>
+                   <x>220</x>
+                   <y>110</y>
+                   <width>111</width>
+                   <height>41</height>
+                  </rect>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Microsoft YaHei UI</family>
+                   <pointsize>14</pointsize>
+                   <italic>false</italic>
+                   <bold>false</bold>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+    color: rgb(255, 255, 255);
+    background-color: rgb(38, 56, 81);
+border-radius:15px;
+}
+QPushButton:pressed 
+{
+	background-color: rgb(60, 68, 81);
+ }
+
+QPushButton:checked 
+{
+	background-color: rgb(60, 68, 81);
+ }</string>
+                 </property>
+                 <property name="text">
+                  <string>光源2</string>
                  </property>
                  <property name="checkable">
                   <bool>true</bool>
@@ -1393,26 +1475,25 @@ QPushButton:checked
                 <bool>true</bool>
                </property>
               </widget>
-             </widget>
-             <widget class="QPushButton" name="pushButton_sim_3">
-              <property name="geometry">
-               <rect>
-                <x>280</x>
-                <y>440</y>
-                <width>432</width>
-                <height>26</height>
-               </rect>
-              </property>
-              <property name="font">
-               <font>
-                <family>Microsoft YaHei UI</family>
-                <pointsize>14</pointsize>
-                <italic>false</italic>
-                <bold>false</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QPushButton
+              <widget class="QPushButton" name="pushButton_sim_3">
+               <property name="geometry">
+                <rect>
+                 <x>180</x>
+                 <y>240</y>
+                 <width>432</width>
+                 <height>26</height>
+                </rect>
+               </property>
+               <property name="font">
+                <font>
+                 <family>Microsoft YaHei UI</family>
+                 <pointsize>14</pointsize>
+                 <italic>false</italic>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton
 {
     color: rgb(255, 255, 255);
     background-color: rgb(38, 56, 81);
@@ -1427,13 +1508,14 @@ QPushButton:checked
 {
 	background-color: rgb(60, 68, 81);
  }</string>
-              </property>
-              <property name="text">
-               <string>测试</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
+               </property>
+               <property name="text">
+                <string>测试</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
              </widget>
             </widget>
            </item>
