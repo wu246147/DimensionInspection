@@ -2554,7 +2554,7 @@ void MainWindow::on_pushButton_3_clicked()
     if(m_work_mode_type == work_mode_type::hand_mode)
     {
         //开灯
-        communicationCOM.serial->write("SA0255#");
+        communicationCOM.serial->write("SB0255#");
         QThread::msleep(10);
 
         int r = jobmanager.checkCam(0, 0);
@@ -2563,7 +2563,7 @@ void MainWindow::on_pushButton_3_clicked()
         int sleepTime = jobmanager.cams[0].exposure_time / 1000;
         sleepTime += 10;
         QThread::msleep(sleepTime);
-        communicationCOM.serial->write("SA0000#");
+        communicationCOM.serial->write("SB0000#");
     }
     else if(m_work_mode_type == work_mode_type::simulation_mode)
     {
@@ -2576,7 +2576,7 @@ void MainWindow::on_pushButton_4_clicked()
     if(m_work_mode_type == work_mode_type::hand_mode)
     {
         //开灯
-        communicationCOM.serial->write("SB0255#");
+        communicationCOM.serial->write("SC0255#");
         QThread::msleep(10);
 
         int r = jobmanager.checkCam(0, 1);
@@ -2585,7 +2585,7 @@ void MainWindow::on_pushButton_4_clicked()
         int sleepTime = jobmanager.cams[0].exposure_time / 1000;
         sleepTime += 10;
         QThread::msleep(sleepTime);
-        communicationCOM.serial->write("SB0000#");
+        communicationCOM.serial->write("SC0000#");
 
     }
     else if(m_work_mode_type == work_mode_type::simulation_mode)
@@ -3073,17 +3073,30 @@ int MainWindow::changeFileAndCheckCam(int cam_id, int worker_id, std::string fil
     }
     //取像运行
     //开灯
-    communicationCOM.serial->write("SB0255#");
+    if(worker_id == 0)
+    {
+        communicationCOM.serial->write("SB0255#");
+    }
+    else
+    {
+        communicationCOM.serial->write("SC0255#");
+    }
     QThread::msleep(10);
 
     int r = jobmanager.checkCam(cam_id, worker_id);
 
     //关灯
-    int sleepTime = jobmanager.cams[0].exposure_time / 1000;
+    int sleepTime = jobmanager.cams[cam_id].exposure_time / 1000;
     sleepTime += 10;
     QThread::msleep(sleepTime);
-    communicationCOM.serial->write("SB0000#");
-
+    if(worker_id == 0)
+    {
+        communicationCOM.serial->write("SB0000#");
+    }
+    else
+    {
+        communicationCOM.serial->write("SC0000#");
+    }
 
 }
 
