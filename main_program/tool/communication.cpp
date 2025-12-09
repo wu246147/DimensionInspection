@@ -87,14 +87,14 @@ void Communication::tcp_ready_read()
         // std::cout <<  << std::endl;
         QStringList infoList = info.split(',');
 
-        if(infoList[7].toInt() == 1)
+        if(infoList[7].toInt() == 3)
         {
             //运行
-            checkCamSignal(infoList[7].toInt(), infoList[8].toInt(), infoList[6].toStdString());
+            checkCamSignal(infoList[8].toInt(), 0, infoList[6].toStdString());
 
 
         }
-        else if(infoList[7].toInt() == 3)
+        else if(infoList[7].toInt() == 1)
         {
             //标定
             calibrationSignal(infoList[0].toDouble(),

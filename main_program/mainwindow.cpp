@@ -442,12 +442,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     //机器人通讯事件
     // regSendImagePixelEvent();
-    regCheckCamEvent();
+    regRobotEvent();
     // regChangeDisplayEvent();
     // regChangeRunModelEvent();
     // regChangeShowModeEvent();
     // regChangeFileEvent();
 
+    //plc 事件
+
+    regPLCEvent();
 
     connect(this, &MainWindow::destroyed, this, &MainWindow::dispose_slot);
     connect(this, &MainWindow::add_log_signal, this, &MainWindow::add_log_even);
@@ -506,6 +509,21 @@ MainWindow::MainWindow(QWidget *parent)
     // ui->action_calibration->setVisible(false);
 
 
+    //心跳，用于给plc发送一些状态
+    isRunning = true;
+    runFut = QtConcurrent::run(this, &MainWindow::runThread);
+    LOGE("run thread start");
+
+    //plc 信号线程启动
+    plcInfoTime = new QTimer(this);
+    connect(plcInfoTime, &QTimer::timeout, this, &MainWindow::plcInfoUpdateEven);
+
+    //太频繁的话，会导致遍历好几遍
+    // plcInfoTime->setInterval(200);
+    plcInfoTime->setInterval(1000);
+    plcInfoTime->start();
+
+
 
 }
 
@@ -525,8 +543,61 @@ void MainWindow::runThread()
         {
             //等待机器人触发信号
             QThread::msleep(100);
+            // jaka机器人通讯
+            // QMetaObject::invokeMethod(this, "robotGrab",  Qt::QueuedConnection);
 
-            QMetaObject::invokeMethod(this, "robotGrab",  Qt::QueuedConnection);
+            QDateTime currentDateTime = QDateTime::currentDateTime();
+
+            //plc通讯
+            if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+            {
+                //心跳
+                int offset, val;   //心跳结果输出位置为11
+                offset = (int)plc_offset::heardBeat;
+                if(currentDateTime.time().second() % 2 == 0)
+                {
+                    val = 1;
+                    plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
+                    // LOGE("WriteVal finish");
+
+                }
+                else
+                {
+                    val = 0;
+                    plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
+                    // LOGE("WriteVal finish");
+                }
+
+
+                //准备好
+                offset = (int)plc_offset::readly;
+                if(isRealy)
+                {
+                    val = 1;
+                }
+                else
+                {
+                    val = 0;
+                }
+                plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
+
+
+                //车型
+                offset = (int)plc_offset::carNOOutput;
+                val = 0;
+                try
+                {
+                    val = job_name.toInt();
+                }
+                catch(...)
+                {
+                    LOGE("error:job_name is not int");
+                }
+
+                plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
+
+
+            }
 
         }
         catch(cv::Exception &e)
@@ -548,6 +619,129 @@ void MainWindow::runThread()
             LOGE("other error.");
         }
     }
+}
+
+void MainWindow::plcInfoUpdateEven()
+{
+    try
+    {
+        if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+        {
+            //显示plc连接状态
+            // QString styleSheetPushButton = QString("QPushButton{background-color: rgb(13, 232, 16);border-radius:10px;}");
+            // ui->pushButton_plc_connect_state->setStyleSheet(styleSheetPushButton);
+
+            QMetaObject::invokeMethod(ui->pushButton_plc_connect_state, [pushButton = ui->pushButton_plc_connect_state]()
+            {
+                QString styleSheetPushButton = QString("QPushButton{background-color: rgb(13, 232, 16);border-radius:10px;}");
+                pushButton->setStyleSheet(styleSheetPushButton);
+            }, Qt::QueuedConnection);
+
+
+            ///作业切换信号
+            //判断是否要切换
+            int changeJobStartID = plc_offset::carNOInput;
+            int changeJobID = plc_offset::changeJob;
+
+            bool isChangeFile = false;
+            int currentJobFileID = -1;
+            int changeJobFileID = -1;
+            int isChangeJob = 0;
+            isChangeJob = plcSiemens->DB_Buffer[changeJobID];
+            if(isChangeJob == 1)
+            {
+                //复位信号
+                int val;
+                val = 0;
+                plcSiemens->WriteValue(plcSiemens->eByte, DB_No, changeJobID, &val);
+
+                try
+                {
+                    currentJobFileID = job_name.toInt();
+                    if(currentJobFileID != plcSiemens->DB_Buffer[changeJobStartID])
+                    {
+                        changeJobFileID = plcSiemens->DB_Buffer[changeJobStartID];
+                        isChangeFile = true;
+                    }
+                }
+                catch(...)
+                {
+
+                    LOGE("error:job_name is not int");
+                }
+            }
+
+            //执行切换
+
+            if(isChangeFile)
+            {
+
+                QString job_path = QString(job_root_path + "/" + std::to_string(changeJobFileID).data() + ".data");
+
+                if(!QFile(job_path).exists())
+                {
+
+                    QMetaObject::invokeMethod(this, [stringInfo = std::to_string(changeJobFileID).data(), ui = this]()
+                    {
+                        QMessageBox::warning(ui, "警告.", "作业还没创建，请先创建作业： " + QString(stringInfo), QMessageBox::StandardButton::Ok);
+                    }, Qt::QueuedConnection);
+
+                }
+                else
+                {
+                    changeFileSignal(std::to_string(changeJobFileID));
+                }
+
+            }
+
+            ///触发取像
+            int checkCam = plc_offset::camCheck;
+            int checkWorkID = plc_offset::workerID;
+            if(plcSiemens->DB_Buffer[checkCam] == 1)
+            {
+                //复位信号
+                int val;
+                val = 0;
+                plcSiemens->WriteValue(plcSiemens->eByte, DB_No, checkCam, &val);
+
+                //拍照
+                checkCamSignal(0, plcSiemens->DB_Buffer[checkWorkID] - 1);
+
+            }
+
+
+
+        }
+        else
+        {
+            //显示plc连接状态
+            // QString styleSheetPushButton = QString("QPushButton{background-color: #bd3124;border-radius:10px;}");
+            // ui->pushButton_plc_connect_state->setStyleSheet(styleSheetPushButton);
+
+            QMetaObject::invokeMethod(ui->pushButton_plc_connect_state, [pushButton = ui->pushButton_plc_connect_state]()
+            {
+                QString styleSheetPushButton = QString("QPushButton{background-color: #bd3124;border-radius:10px;}");
+                pushButton->setStyleSheet(styleSheetPushButton);
+            }, Qt::QueuedConnection);
+
+        }
+
+    }
+    catch(std::exception &e)
+    {
+        LOGE("error:%s", e.what());
+
+    }
+    catch(QException &e)
+    {
+        LOGE("error:%s", e.what());
+
+    }
+    catch(...)
+    {
+        LOGE("other error.");
+    }
+
 }
 
 void MainWindow::robotGrab()
@@ -1324,9 +1518,9 @@ void MainWindow::remove_update_display_img_event()
     }
 }
 
-void MainWindow::regCheckCamEvent()
+void MainWindow::regRobotEvent()
 {
-    removeCheckCamEvent();
+    removeRobotEvent();
     connect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
     // connect(&communication, &Communication::focusingSignal, &jobmanager, &JobManager::focusingCam);
     // connect(&communication, &Communication::calibrationSignal, &jobmanager, &JobManager::calibrationCam);
@@ -1335,7 +1529,7 @@ void MainWindow::regCheckCamEvent()
 
 }
 
-void MainWindow::removeCheckCamEvent()
+void MainWindow::removeRobotEvent()
 {
     disconnect(&communication, &Communication::checkCamSignal, this, &MainWindow::changeFileAndCheckCam);
     // disconnect(&communication, &Communication::focusingSignal, &jobmanager, &JobManager::focusingCam);
@@ -1343,54 +1537,20 @@ void MainWindow::removeCheckCamEvent()
     // disconnect(&communication, &Communication::calibrationSignal, this, &MainWindow::calibrationCamTest);
 
 }
+void MainWindow::regPLCEvent()
+{
+    removePLCEvent();
+    connect(this, &MainWindow::changeFileSignal, this, &MainWindow::changeFileEven);
+    connect(this, &MainWindow::checkCamSignal, this, &MainWindow::CheckCam);
 
-// void MainWindow::regChangeDisplayEvent()
-// {
-//     removeChangeDisplayEvent();
-//     connect(&communication, &Communication::changeDisplaySignal, this, &MainWindow::changeDisplayEven);
-// }
+}
 
-// void MainWindow::removeChangeDisplayEvent()
-// {
-//     disconnect(&communication, &Communication::changeDisplaySignal, this, &MainWindow::changeDisplayEven);
-// }
+void MainWindow::removePLCEvent()
+{
+    disconnect(this, &MainWindow::changeFileSignal, this, &MainWindow::changeFileEven);
+    disconnect(this, &MainWindow::checkCamSignal, this, &MainWindow::CheckCam);
 
-// void MainWindow::regChangeShowModeEvent()
-// {
-//     removeChangeShowModeEvent();
-//     connect(&communication, &Communication::changeShowModeSignal, this, &MainWindow::changeShowModeEven);
-//     connect(&communication, &Communication::changeCenterLineDistSignal, this, &MainWindow::changeCenterLineDistEven);
-
-// }
-
-// void MainWindow::removeChangeShowModeEvent()
-// {
-//     disconnect(&communication, &Communication::changeShowModeSignal, this, &MainWindow::changeShowModeEven);
-//     disconnect(&communication, &Communication::changeCenterLineDistSignal, this, &MainWindow::changeCenterLineDistEven);
-
-// }
-
-// void MainWindow::regChangeRunModelEvent()
-// {
-//     removeChangeRunModelEvent();
-//     connect(&communication, &Communication::changeRunModelSignal, this, &MainWindow::changeRunModelEven);
-// }
-
-// void MainWindow::removeChangeRunModelEvent()
-// {
-//     disconnect(&communication, &Communication::changeRunModelSignal, this, &MainWindow::changeRunModelEven);
-// }
-
-// void MainWindow::regChangeFileEvent()
-// {
-//     removeChangeFileEvent();
-//     connect(&communication, &Communication::changeFileSignal, this, &MainWindow::changeFileEven);
-// }
-
-// void MainWindow::removeChangeFileEvent()
-// {
-//     disconnect(&communication, &Communication::changeFileSignal, this, &MainWindow::changeFileEven);
-// }
+}
 
 // void MainWindow::regSendImagePixelEvent()
 // {
@@ -2120,24 +2280,27 @@ void MainWindow::job_result_output(int work_id)
             addStatisticsData(work_id);
 
         }
+
+
         //结果输出
+
         if(work_id == 0)
         {
             char tmp_info[256];
-            sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,0,");
+            sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,0,%d,0", jobmanager.result());
             communication.tcp_send(tmp_info);
         }
         else
         {
             char tmp_info[256];
-            sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,%f,", jobmanager.dist);
+            sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,%d,%f,", jobmanager.result(), jobmanager.dist);
             communication.tcp_send(tmp_info);
 
 
             //发给plc
             {
                 int offset, val;
-                offset = 5;      //工位2结果输出位置为4，这里输到低通道就是5.
+                offset = plc_offset::checkResult;      //工位2结果输出位置为4，这里输到低通道就是5.
                 if(jobmanager.result())
                 {
                     val = 1;
@@ -2159,7 +2322,7 @@ void MainWindow::job_result_output(int work_id)
             {
                 int offset;
                 float val;
-                offset = 6;  //工位2结果输出位置为6，这里输到6.
+                offset = plc_offset::checkDist;     //工位2结果输出位置为6，这里输到6.
                 val = jobmanager.dist;
                 LOGE("start Write to DB %d.DBB%d :%f", DB_No, offset, val);
                 if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
@@ -2169,6 +2332,23 @@ void MainWindow::job_result_output(int work_id)
                     LOGE("WriteFloat rt :%d", res);
 
                 }
+            }
+        }
+
+        //取像完成
+        //发给plc
+        {
+            int offset, val;
+            offset = plc_offset::acqFinish;      //工位2结果输出位置为4，这里输到低通道就是5.
+
+            val = 1;
+
+            LOGE("start Write to DB %d.DBB%d :%d", DB_No, offset, val);
+            if(plcSiemens != nullptr && plcSiemens->MyS7Client->Connected())
+            {
+                int res = plcSiemens->WriteValue(plcSiemens->eByte, DB_No, offset, &val);
+                LOGE("WriteInt rt :%d", res);
+
             }
         }
 
@@ -3102,13 +3282,20 @@ void MainWindow::on_pushButton_correction_clicked()
     jobmanager.k = real_value / (jobmanager.dist / jobmanager.k);
 }
 
-int MainWindow::changeFileAndCheckCam(int cam_id, int worker_id, std::string fileName)
+void MainWindow::changeFileAndCheckCam(int cam_id, int worker_id, std::string fileName)
 {
     //切换作业
     if(job_name.toStdString().compare(fileName) != 0)
     {
         changeFile(fileName);
     }
+    //取像运行
+    CheckCam(cam_id, worker_id);
+
+}
+
+void MainWindow::CheckCam(int cam_id, int worker_id)
+{
     //取像运行
     //开灯
     if(worker_id == 0)
@@ -3125,7 +3312,7 @@ int MainWindow::changeFileAndCheckCam(int cam_id, int worker_id, std::string fil
     {
         // 3. 取像
         int r = jobmanager.checkCam(cam_id, worker_id);
-        Q_UNUSED(r);          // 如果想判断成败，在这里处理
+        // Q_UNUSED(r);          // 如果想判断成败，在这里处理
 
         // 4. 计算曝光时间，再关灯
         int lightOnTime = jobmanager.cams[cam_id].exposure_time / 1000 + 200;
@@ -3142,22 +3329,6 @@ int MainWindow::changeFileAndCheckCam(int cam_id, int worker_id, std::string fil
         });
     });
 
-
-    // int r = jobmanager.checkCam(cam_id, worker_id);
-
-    // //关灯
-    // int sleepTime = jobmanager.cams[cam_id].exposure_time / 1000;
-    // sleepTime += 500;
-    // QThread::msleep(sleepTime);
-    // if(worker_id == 0)
-    // {
-    //     communicationCOM.serial->write("SB0000#\r\n");
-    // }
-    // else
-    // {
-    //     communicationCOM.serial->write("SC0000#\r\n");
-    // }
-
 }
 
 
@@ -3168,16 +3339,40 @@ void MainWindow::on_pushButton_sim_2_clicked(bool checked)
     if(checked)
     {
         //运行线程开启
-        isRunning = true;
-        runFut = QtConcurrent::run(this, &MainWindow::runThread);
-        LOGE("run thread start");
+        isRealy = true;
+        // runFut = QtConcurrent::run(this, &MainWindow::runThread);
+        // LOGE("run thread start");
+
+        ui->menubar->setEnabled(false);
+        ui->actionnew_file->setVisible(false);
+        ui->actionopen->setVisible(false);
+        ui->actionsave->setVisible(false);
+        ui->actionpara_setting->setVisible(false);
+        ui->actioncam_setting->setVisible(false);
+
+
+        QString styleSheet = QString("QWidget{background-color: rgb(160, 168, 181);}");
+
+        ui->widget_16->setStyleSheet(styleSheet);
 
     }
     else
     {
         //运行线程停止
-        isRunning = false;
-        runFut.waitForFinished();
+        isRealy = false;
+        // runFut.waitForFinished();
+
+        ui->menubar->setEnabled(true);
+        ui->actionnew_file->setVisible(true);
+        ui->actionopen->setVisible(true);
+        ui->actionsave->setVisible(true);
+        ui->actionpara_setting->setVisible(true);
+        ui->actioncam_setting->setVisible(true);
+
+        QString styleSheet = QString("QWidget{\n	background-color: rgb(60, 68, 81);}");
+
+        ui->widget_16->setStyleSheet(styleSheet);
+
     }
 
 

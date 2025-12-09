@@ -63,13 +63,13 @@ public:
     // 通讯参数
     QString ipAddress = "192.168.1.5";
     int DB_No = 1;
-    int DB_Length = 50;
+    static const int DB_Length = 30;
     int DB_StartID = 0;
 
     //通讯对象
     TS7Client *MyS7Client = nullptr;
     //通讯结果参数
-    byte DB_Buffer[200];
+    byte DB_Buffer[DB_Length * 8];
     //通讯连接
     bool m_exitThread = false;
 

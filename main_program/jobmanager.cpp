@@ -1001,6 +1001,8 @@ void JobManager::getDistance()
         /// 求距离
         dist = pointToLineDistance3D(A3D, B3D, P3D);
 
+        LOGE("origin dist:%f", dist);
+
         dist *= k;
 
         LOGE("dist:%f", dist);

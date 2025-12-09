@@ -19,7 +19,7 @@ PLC_Siemens::PLC_Siemens(QString ipAddress, int DB_No, int DB_Length)
     MyS7Client = new TS7Client();
     this->ipAddress = ipAddress;
     this->DB_No = DB_No;
-    this->DB_Length = DB_Length;
+    // this->DB_Length = DB_Length;
     connect();
 }
 
@@ -66,8 +66,20 @@ void PLC_Siemens::ReadCycle()
     res = MyS7Client->DBRead(DB_No, DB_StartID, DB_Length, &DB_Buffer);
     if(res != 0)
     {
+        LOGE("listense fail");
 
 
+    }
+    else
+    {
+        // //打印出来看一下
+        // for(int id = 0; id < 20; ++id)
+        // {
+        //     int isChangeJob = 0;
+        //     isChangeJob = (int)DB_Buffer[id];
+
+        //     LOGE("DB_Buffer [%d]:%d", id, isChangeJob);
+        // }
     }
     this->msleep(ulong(100)); // 100000us=100ms
 }

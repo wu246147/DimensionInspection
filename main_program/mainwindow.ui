@@ -29,6 +29,17 @@ QPushButton
 	font: 14pt;
 	background-color: rgb(36, 43, 53);
 }
+
+QPushButton:pressed 
+{
+	background-color: rgb(160, 168, 181);
+ }
+
+QPushButton:checked 
+{
+	background-color: rgb(160, 168, 181);
+ }
+
 QTabBar::tab
 {
 	background-color: rgb(36, 43, 53);
@@ -85,10 +96,7 @@ QGroupBox
        </size>
       </property>
       <property name="styleSheet">
-       <string notr="true">QWidget{
-	background-color: rgb(60, 68, 81);
-}
-</string>
+       <string notr="true">QWidget{background-color: rgb(60, 68, 81);}</string>
       </property>
       <layout class="QGridLayout" name="gridLayout_11">
        <property name="leftMargin">
@@ -214,38 +222,6 @@ QGroupBox
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <item row="0" column="0">
-        <widget class="QLabel" name="labelLoge">
-         <property name="minimumSize">
-          <size>
-           <width>140</width>
-           <height>30</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>140</width>
-           <height>30</height>
-          </size>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">font: 700 14px &quot;幼圆&quot;;
-color: #FFFFFF;</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::AutoText</enum>
-         </property>
-         <property name="pixmap">
-          <pixmap resource="Image.qrc">:/Image/img/Logo.png</pixmap>
-         </property>
-         <property name="scaledContents">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="1">
         <spacer name="horizontalSpacer">
          <property name="orientation">
@@ -259,7 +235,7 @@ color: #FFFFFF;</string>
          </property>
         </spacer>
        </item>
-       <item row="0" column="2">
+       <item row="0" column="3">
         <widget class="QWidget" name="widget_18" native="true">
          <property name="minimumSize">
           <size>
@@ -348,6 +324,106 @@ color: #FFFFFF;</string>
           </item>
          </layout>
         </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelLoge">
+         <property name="minimumSize">
+          <size>
+           <width>140</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>140</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">font: 700 14px &quot;幼圆&quot;;
+color: #FFFFFF;</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::AutoText</enum>
+         </property>
+         <property name="pixmap">
+          <pixmap resource="Image.qrc">:/Image/img/Logo.png</pixmap>
+         </property>
+         <property name="scaledContents">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <layout class="QGridLayout" name="gridLayout_31">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_currentTimeLabel_2">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="sizeIncrement">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="text">
+            <string>PLC连接状态：</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QPushButton" name="pushButton_plc_connect_state">
+           <property name="minimumSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QPushButton
+{
+    background-color: rgb(128,128,128);
+	border-radius:10px;
+}</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_26">
+           <property name="minimumSize">
+            <size>
+             <width>20</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
@@ -527,9 +603,14 @@ color: rgb(0, 120, 220);</string>
     background-color: rgb(38, 56, 81);
 border-radius:15px;
 }
+QPushButton:pressed 
+{
+	background-color: rgb(160, 168, 181);
+ }
+
 QPushButton:checked 
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(160, 168, 181);
  }</string>
                  </property>
                  <property name="text">
@@ -552,54 +633,18 @@ QPushButton:checked
     background-color: rgb(38, 56, 81);
 border-radius:15px;
 }
-QPushButton:checked 
-{
-	background-color: rgb(60, 68, 81);
- }</string>
-                 </property>
-                 <property name="text">
-                  <string>工位2运行</string>
-                 </property>
-                </widget>
-                <widget class="QPushButton" name="pushButton_sim">
-                 <property name="geometry">
-                  <rect>
-                   <x>40</x>
-                   <y>0</y>
-                   <width>111</width>
-                   <height>41</height>
-                  </rect>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <family>Microsoft YaHei UI</family>
-                   <pointsize>14</pointsize>
-                   <italic>false</italic>
-                   <bold>false</bold>
-                  </font>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton
-{
-    color: rgb(255, 255, 255);
-    background-color: rgb(38, 56, 81);
-border-radius:15px;
-}
 QPushButton:pressed 
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(160, 168, 181);
  }
 
 QPushButton:checked 
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(160, 168, 181);
  }</string>
                  </property>
                  <property name="text">
-                  <string>仿真</string>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
+                  <string>工位2运行</string>
                  </property>
                 </widget>
                 <widget class="QPushButton" name="pushButton_correction">
@@ -628,12 +673,12 @@ border-radius:15px;
 }
 QPushButton:pressed 
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(160, 168, 181);
  }
 
 QPushButton:checked 
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(160, 168, 181);
  }</string>
                  </property>
                  <property name="text">
@@ -695,16 +740,16 @@ border-radius:15px;
 }
 QPushButton:pressed 
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(160, 168, 181);
  }
 
 QPushButton:checked 
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(160, 168, 181);
  }</string>
                  </property>
                  <property name="text">
-                  <string>运行</string>
+                  <string>自动</string>
                  </property>
                  <property name="checkable">
                   <bool>true</bool>
@@ -736,12 +781,12 @@ border-radius:15px;
 }
 QPushButton:pressed 
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(160, 168, 181);
  }
 
 QPushButton:checked 
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(160, 168, 181);
  }</string>
                  </property>
                  <property name="text">
@@ -777,12 +822,12 @@ border-radius:15px;
 }
 QPushButton:pressed 
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(160, 168, 181);
  }
 
 QPushButton:checked 
 {
-	background-color: rgb(60, 68, 81);
+	background-color: rgb(160, 168, 181);
  }</string>
                  </property>
                  <property name="text">
@@ -1184,6 +1229,47 @@ QPushButton:checked
                 </property>
                 <property name="text">
                  <string>test</string>
+                </property>
+               </widget>
+               <widget class="QPushButton" name="pushButton_sim">
+                <property name="geometry">
+                 <rect>
+                  <x>30</x>
+                  <y>130</y>
+                  <width>111</width>
+                  <height>41</height>
+                 </rect>
+                </property>
+                <property name="font">
+                 <font>
+                  <family>Microsoft YaHei UI</family>
+                  <pointsize>14</pointsize>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton
+{
+    color: rgb(255, 255, 255);
+    background-color: rgb(38, 56, 81);
+border-radius:15px;
+}
+QPushButton:pressed 
+{
+	background-color: rgb(60, 68, 81);
+ }
+
+QPushButton:checked 
+{
+	background-color: rgb(60, 68, 81);
+ }</string>
+                </property>
+                <property name="text">
+                 <string>仿真</string>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
                 </property>
                </widget>
               </widget>

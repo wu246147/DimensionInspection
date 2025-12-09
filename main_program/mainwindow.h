@@ -47,6 +47,22 @@ namespace Ui
 }
 QT_END_NAMESPACE
 
+enum plc_offset
+{
+    carNOInput = 1,
+    changeJob = 3,
+    workerID = 5,
+    camCheck = 7,
+
+    heardBeat = 13,
+    readly = 15,
+    carNOOutput = 17,
+    checkResult = 19,
+    acqFinish = 21,
+    checkDist = 24,
+
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -65,12 +81,16 @@ public:
     int cam_id = 0;
 
     // 运行线程
-    bool isRunning = true;
+    bool isRunning = false;
     QFuture<void> runFut;
+    bool isRealy = false;
 
     void runThread();
 
+    //plc 通讯结果刷新线程
+    QTimer *plcInfoTime;
 
+    void plcInfoUpdateEven();
 
     // 作业
 
@@ -202,14 +222,14 @@ public:
     void remove_update_display_img_event();
 
     ///
-    /// \brief regCheckCamEvent 部署切换显示窗口事件
+    /// \brief regRobotEvent 部署切换显示窗口事件
     ///
-    void regCheckCamEvent();
+    void regRobotEvent();
 
     ///
-    /// \brief removeCheckCamEvent 清除切换显示窗口事件
+    /// \brief removeRobotEvent 清除切换显示窗口事件
     ///
-    void removeCheckCamEvent();
+    void removeRobotEvent();
 
     // ///
     // /// \brief regChangeDisplayEvent 部署切换显示窗口事件
@@ -241,15 +261,15 @@ public:
     // ///
     // void removeChangeRunModelEvent();
 
-    // ///
-    // /// \brief regChangeFileEvent 部署切换作业事件
-    // ///
-    // void regChangeFileEvent();
+    ///
+    /// \brief regPLCEvent 部署切换作业事件
+    ///
+    void regPLCEvent();
 
-    // ///
-    // /// \brief removeChangeFileEvent 清除切换作业事件
-    // ///
-    // void removeChangeFileEvent();
+    ///
+    /// \brief removePLCEvent 清除切换作业事件
+    ///
+    void removePLCEvent();
 
     // ///
     // /// \brief regChangeFileEvent 部署切换作业事件
@@ -520,7 +540,9 @@ private slots:
 
     void on_pushButton_correction_clicked();
 
-    int changeFileAndCheckCam(int cam_id, int worker_id, std::string fileName);
+    void changeFileAndCheckCam(int cam_id, int worker_id, std::string fileName);
+
+    void CheckCam(int cam_id, int worker_id);
 
 
     void on_pushButton_sim_2_clicked(bool checked);
@@ -546,6 +568,19 @@ signals:
     /// \brief clean_log_signal 清空日志信号
     ///
     void clean_log_signal();
+
+    ///
+    /// \brief changeFileSignal 切换作业信号
+    /// \param file_path    作业地址
+    ///
+    void changeFileSignal(std::string file_path);
+
+    ///
+    /// \brief changeFileSignal 切换作业信号
+    /// \param file_path    作业地址
+    ///
+    void checkCamSignal(int camID, int workerID);
+
 
 private:
 
