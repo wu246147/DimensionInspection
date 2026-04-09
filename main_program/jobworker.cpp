@@ -306,6 +306,7 @@ void JobWorker::acqfifo_complete(cv::Mat tmp_img)
     check_count += 1;
     if(is_busy == false)
     {
+        LOGE_HIGH("aqc finish");
 
         img = tmp_img.clone();
 

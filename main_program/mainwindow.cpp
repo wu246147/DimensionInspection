@@ -703,10 +703,8 @@ void MainWindow::plcInfoUpdateEven()
                 int val;
                 val = 0;
                 plcSiemens->WriteValue(plcSiemens->eByte, DB_No, checkCam, &val);
-
                 //拍照
                 checkCamSignal(0, plcSiemens->DB_Buffer[checkWorkID] - 1);
-
             }
 
 
@@ -717,7 +715,6 @@ void MainWindow::plcInfoUpdateEven()
             //显示plc连接状态
             // QString styleSheetPushButton = QString("QPushButton{background-color: #bd3124;border-radius:10px;}");
             // ui->pushButton_plc_connect_state->setStyleSheet(styleSheetPushButton);
-
             QMetaObject::invokeMethod(ui->pushButton_plc_connect_state, [pushButton = ui->pushButton_plc_connect_state]()
             {
                 QString styleSheetPushButton = QString("QPushButton{background-color: #bd3124;border-radius:10px;}");
@@ -2287,13 +2284,17 @@ void MainWindow::job_result_output(int work_id)
         if(work_id == 0)
         {
             char tmp_info[256];
-            sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,0,%d,0", jobmanager.result());
+            // sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,0,%d,0", jobmanager.result());
+
+            sprintf(tmp_info, "%d,0,0,0,0,0,0,0,0,0,", jobmanager.result());
             communication.tcp_send(tmp_info);
         }
         else
         {
             char tmp_info[256];
-            sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,%d,%f,", jobmanager.result(), jobmanager.dist);
+            // sprintf(tmp_info, "0,0,0,0,0,0,0,0,0,0,0,0,%d,%f,", jobmanager.result(), jobmanager.dist);
+            sprintf(tmp_info, "%d,0,0,0,0,0,0,0,0,%f,", jobmanager.result(), jobmanager.dist);
+
             communication.tcp_send(tmp_info);
 
 
@@ -2764,6 +2765,7 @@ void MainWindow::on_pushButton_3_clicked()
             int lightOnTime = jobmanager.cams[0].exposure_time / 1000 + 200;
             QTimer::singleShot(lightOnTime, this, [this]()
             {
+                LOGE_PROFESSIONAL("cam%d close light", cam_id);
                 communicationCOM.serial->write("SB0000#\r\n");
             });
         });
@@ -2986,7 +2988,7 @@ void MainWindow::on_action_calibration_triggered()
         // LOGE_HIGH("00");
 
         //打开设置界面
-        DialogRobotAcq *dialog = new DialogRobotAcq(&jobmanager, &communicationModbus, &communicationCOM, this);
+        DialogRobotAcq *dialog = new DialogRobotAcq(&jobmanager, &communication, &communicationCOM, this);
         Qt::WindowFlags flags = Qt::Dialog;
         flags |= Qt::WindowCloseButtonHint;
         dialog->setWindowFlags(flags);
@@ -2995,8 +2997,8 @@ void MainWindow::on_action_calibration_triggered()
 
         // 加载接收触发事件
         connect(&communication, &Communication::calibrationSignal, dialog, &DialogRobotAcq::calibrationCam);
-        // dialog->exec();
-        dialog->show();
+        dialog->exec();
+        // dialog->show();
         disconnect(&communication, &Communication::calibrationSignal, dialog, &DialogRobotAcq::calibrationCam);
         // LOGE_HIGH("22");
 

@@ -6,6 +6,8 @@ DialogRobotAcq::DialogRobotAcq(QWidget *parent) :
     ui(new Ui::DialogRobotAcq)
 {
     ui->setupUi(this);
+
+
 }
 
 DialogRobotAcq::~DialogRobotAcq()
@@ -13,21 +15,28 @@ DialogRobotAcq::~DialogRobotAcq()
     delete ui;
 }
 
-DialogRobotAcq::DialogRobotAcq(JobManager *j, CommunicationModbus *c, COM *com, QWidget *parent):
+DialogRobotAcq::DialogRobotAcq(JobManager *j, Communication *c, COM *com, QWidget *parent):
     QDialog(parent),
     ui(new Ui::DialogRobotAcq)
 {
     ui->setupUi(this);
     jobmanager = j;
-    communicationModbus = c;
+    communication = c;
 
     communicationCOM = com;
+
+    ui->pushButton_move_and_acq->setVisible(false);
+    ui->pushButton_read_coordinates->setVisible(false);
+    ui->pushButton_save_data->setVisible(false);
+
 }
 
 void DialogRobotAcq::calibrationCam(float robotX, float robotY, float robotZ, float robotRX, float robotRY, float robotRZ)
 {
+    // LOGE("111");
     //图像采集
     on_pushButton_acq_clicked();
+    // LOGE("222");
 
     //数据记录
     robotPoints.clear();
@@ -37,6 +46,7 @@ void DialogRobotAcq::calibrationCam(float robotX, float robotY, float robotZ, fl
     robotPoints.push_back(robotRX);
     robotPoints.push_back(robotRY);
     robotPoints.push_back(robotRZ);
+    // LOGE("333");
 
     //更新界面
     ui->doubleSpinBox_calib_robotX->setValue(robotPoints[0]);
@@ -45,6 +55,25 @@ void DialogRobotAcq::calibrationCam(float robotX, float robotY, float robotZ, fl
     ui->doubleSpinBox_calib_robotRX->setValue(robotPoints[3]);
     ui->doubleSpinBox_calib_robotRY->setValue(robotPoints[4]);
     ui->doubleSpinBox_calib_robotRZ->setValue(robotPoints[5]);
+    // LOGE("444");
+
+    LOGE("exposure_time：%f", jobmanager->cams[0].exposure_time);
+
+    int lightOnTime = jobmanager->cams[0].exposure_time / 1000 + 1000;
+
+    LOGE("lightOnTime:%d", lightOnTime);
+
+    QTimer::singleShot(lightOnTime, this, [this]()
+    {
+        //保存图片
+        on_pushButton_save_data_clicked();
+        // LOGE("555");
+
+        //返回结果
+        communication->tcp_send("1,0,0,0,0,0,0,0,0,");
+        // LOGE("666");
+    });
+
 
 }
 
@@ -56,11 +85,21 @@ void DialogRobotAcq::on_pushButton_acq_clicked()
 
     int r = jobmanager->checkCam(0, 0);
 
-    //关灯
-    int sleepTime = jobmanager->cams[0].exposure_time / 1000;
-    sleepTime += 10;
-    QThread::msleep(sleepTime);
-    communicationCOM->serial->write("SA0000#");
+    // //关灯
+    // int sleepTime = jobmanager->cams[0].exposure_time / 1000;
+    // sleepTime += 10;
+    // QThread::msleep(sleepTime);
+    // communicationCOM->serial->write("SA0000#");
+
+    int lightOnTime = jobmanager->cams[0].exposure_time / 1000 + 1000;
+    QTimer::singleShot(lightOnTime, this, [this]()
+    {
+        LOGE_PROFESSIONAL("cam%d close light", cam_id);
+        communicationCOM->serial->write("SB0000#\r\n");
+    });
+
+
+
 }
 
 

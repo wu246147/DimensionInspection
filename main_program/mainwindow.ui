@@ -837,6 +837,47 @@ QPushButton:checked
                   <bool>true</bool>
                  </property>
                 </widget>
+                <widget class="QPushButton" name="pushButton_sim">
+                 <property name="geometry">
+                  <rect>
+                   <x>40</x>
+                   <y>0</y>
+                   <width>111</width>
+                   <height>41</height>
+                  </rect>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Microsoft YaHei UI</family>
+                   <pointsize>14</pointsize>
+                   <italic>false</italic>
+                   <bold>false</bold>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton
+{
+    color: rgb(255, 255, 255);
+    background-color: rgb(38, 56, 81);
+border-radius:15px;
+}
+QPushButton:pressed 
+{
+	background-color: rgb(60, 68, 81);
+ }
+
+QPushButton:checked 
+{
+	background-color: rgb(60, 68, 81);
+ }</string>
+                 </property>
+                 <property name="text">
+                  <string>仿真</string>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                </widget>
                </widget>
               </item>
              </layout>
@@ -1229,47 +1270,6 @@ QPushButton:checked
                 </property>
                 <property name="text">
                  <string>test</string>
-                </property>
-               </widget>
-               <widget class="QPushButton" name="pushButton_sim">
-                <property name="geometry">
-                 <rect>
-                  <x>30</x>
-                  <y>130</y>
-                  <width>111</width>
-                  <height>41</height>
-                 </rect>
-                </property>
-                <property name="font">
-                 <font>
-                  <family>Microsoft YaHei UI</family>
-                  <pointsize>14</pointsize>
-                  <italic>false</italic>
-                  <bold>false</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QPushButton
-{
-    color: rgb(255, 255, 255);
-    background-color: rgb(38, 56, 81);
-border-radius:15px;
-}
-QPushButton:pressed 
-{
-	background-color: rgb(60, 68, 81);
- }
-
-QPushButton:checked 
-{
-	background-color: rgb(60, 68, 81);
- }</string>
-                </property>
-                <property name="text">
-                 <string>仿真</string>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
                 </property>
                </widget>
               </widget>

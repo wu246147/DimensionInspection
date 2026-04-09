@@ -6,6 +6,7 @@
 #include "tool/projecttool.h"
 #include "tool/communicationmodbus.h"
 #include "tool/communicationcom.h"
+#include "tool/communication.h"
 
 namespace Ui
 {
@@ -19,11 +20,17 @@ class DialogRobotAcq : public QDialog
 public:
     explicit DialogRobotAcq(QWidget *parent = nullptr);
     ~DialogRobotAcq();
-    DialogRobotAcq(JobManager *j, CommunicationModbus *c, COM *com, QWidget *parent = nullptr);
+    DialogRobotAcq(JobManager *j, Communication *c, COM *com, QWidget *parent = nullptr);
 
     JobManager *jobmanager = nullptr;
+
     //机器人通讯管理对象
     CommunicationModbus *communicationModbus = nullptr;
+
+    //机器人2通讯管理对象
+    Communication *communication = nullptr;
+
+
     //光源通讯管理对象
     COM *communicationCOM = nullptr;
 
