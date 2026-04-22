@@ -523,7 +523,10 @@ MainWindow::MainWindow(QWidget *parent)
     plcInfoTime->setInterval(1000);
     plcInfoTime->start();
 
-
+    //默认开启保存图片
+    LOGE("set action_save_img true");
+    ui->action_save_img->setChecked(true);
+    on_action_save_img_triggered(true);
 
 }
 
@@ -2577,8 +2580,11 @@ void MainWindow::clean_log_even()
 
 void MainWindow::on_action_save_img_triggered(bool checked)
 {
+    // LOGE("111");
     if(checked)
     {
+        LOGE("set save img");
+
         ui->action_not_save_image->setChecked(false);
         ui->action_save_ng_image->setChecked(false);
         for(int i = 0; i < jobmanager.jobworkers.size(); i++)
@@ -3276,12 +3282,35 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::on_pushButton_correction_clicked()
 {
-    if(jobmanager.dist <= 0)
+    double real_value = ui->doubleSpinBox_real_value->value();
+
+    if(real_value == 0)
     {
+        QMessageBox::warning(this, "警告.", "请先设置实际尺寸.", QMessageBox::StandardButton::Ok);
         return;
     }
-    double real_value = ui->doubleSpinBox_real_value->value();
+    for(int i = 0 ; i < jobmanager.jobworkers.size() ; i++)
+    {
+        if(jobmanager.jobworkers[i].img.empty())
+        {
+            QMessageBox::warning(this, "警告.", "相机" +  QString(std::to_string(i + 1).data())
+                                 + "图片为空,请先采集图片.", QMessageBox::StandardButton::Ok);
+            return;
+        }
+    }
+    jobmanager.k = 1;
+    for(int i = 0 ; i < jobmanager.jobworkers.size() ; i++)
+    {
+        jobmanager.rundemo(i);
+    }
     jobmanager.k = real_value / (jobmanager.dist / jobmanager.k);
+    for(int i = 0 ; i < jobmanager.jobworkers.size() ; i++)
+    {
+        jobmanager.rundemo(i);
+    }
+    QMessageBox::warning(this, "提示.", "矫正完成.", QMessageBox::StandardButton::Ok);
+    return;
+
 }
 
 void MainWindow::changeFileAndCheckCam(int cam_id, int worker_id, std::string fileName)
@@ -3453,4 +3482,11 @@ void MainWindow::on_pushButton_light2_clicked(bool checked)
     }
     LOGE("com send info %s", msg.data());
 }
+
+
+void MainWindow::on_widget_customContextMenuRequested(const QPoint &pos)
+{
+
+}
+
 

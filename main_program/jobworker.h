@@ -394,6 +394,8 @@ public:
     //目前保存ng图的限制个数
     const int save_ng_img_limit_count = 50;
 
+    //目前保存图的限制个数
+    const int save_img_limit_count = 10000;
 
 
     //判断是否正在检测
@@ -406,6 +408,9 @@ public:
 
     //判断是否在实时取像
     bool isGrabbing = false;
+
+    //判断是否在实时取像
+    bool isSiming = false;
 
     //交互类
 

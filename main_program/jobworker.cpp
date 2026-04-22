@@ -778,40 +778,37 @@ void JobWorker::run()
     try
     {
         jobworker_start_time = clock();
-        // if(isFocusing)
-        // {
-        //     cv::Mat img_gray;
-        //     if(img.channels() == 3)
-        //     {
-        //         cv::cvtColor(img, img_gray, cv::COLOR_BGR2GRAY);
-        //     }
-        //     else
-        //     {
-        //         img_gray = img;
-        //     }
-        //     raivas::imgprocess::get_clarity_quantization_value(img_gray, &clarity_quantization_value);
-        //     LOGE_HIGH("clarity_quantization_value:%f", clarity_quantization_value);
-        // }
-        // else
         if(isGrabbing)
         {
 
         }
         else
         {
-            // runLocation(img);
+            LOGE("start runCaliperTool");
             runCaliperTool(img);
-            if(is_save_img)
+
+            if(!isSiming)
             {
-                if(!is_save_ng_img)
+                // LOGE("111");
+
+                if(is_save_img)
                 {
-                    save_img();
-                }
-                else if(is_save_ng_img && !result())
-                {
-                    save_ng_img();
+                    // LOGE("222");
+
+                    if(!is_save_ng_img)
+                    {
+                        LOGE("start save_img");
+                        save_img();
+                    }
+                    else if(is_save_ng_img && !result())
+                    {
+                        LOGE("start save_ng_img");
+
+                        save_ng_img();
+                    }
                 }
             }
+
         }
         jobworker_end_time = clock();
         //    qDebug() << "jobworker" << std::to_string(cam_id).data() << "finish run time:" << jobworker_end_time;
@@ -1043,22 +1040,33 @@ void JobWorker::save_img()
     std::string save_img_dir = QDir::currentPath().toStdString() + "/save_img";
     // std::string save_img_dir = "/data/save_img";
     std::string jobworker_save_img_dir = save_img_dir + "/jobworker" + std::to_string(cam_id);
-    //        string save_img_path = jobworker_save_img_dir+"/" + std::to_string(time(nullptr))+".bmp";
-    //        timeb t;
+
+    //清除多余图片
+    std::vector<std::string> src_image_paths;
+    QDir d(jobworker_save_img_dir.data());
+    d.setFilter(QDir::Files | QDir::NoSymLinks);
+    QFileInfoList list = d.entryInfoList();
+    for(int i = 0; i < list.size(); i++)
+    {
+        QFileInfo info = list.at(i);
+        src_image_paths.push_back(jobworker_save_img_dir + "/" + info.fileName().toStdString());
+    }
+    if(src_image_paths.size() > save_img_limit_count - 1)
+    {
+        for(int i = 0; i < src_image_paths.size() - save_img_limit_count + 1; i++)
+        {
+            std::string img_path = src_image_paths[i];
+            bool ok = QFile::remove(img_path.data());
+        }
+    }
+
+    //保存图片
     QDateTime _t = QDateTime::currentDateTime();
-    //        ftime(&t);
-    //        string save_img_path = jobworker_save_img_dir+"/" + std::to_string(t.time *1000+ t.millitm)+".bmp";
-    std::string save_img_path = jobworker_save_img_dir + "/" + std::to_string(_t.toMSecsSinceEpoch()) + ".bmp";
+
+    // std::string save_img_path = jobworker_save_img_dir + "/" + std::to_string(_t.toMSecsSinceEpoch()) + ".bmp";
+    std::string save_img_path = jobworker_save_img_dir + "/" + _t.toString("yyyy_MM_dd_hh_mm_ss_zzz").toStdString() + ".bmp";
     QDir save_img_dir_dir(save_img_dir.data());
-    // if(!save_img_dir_dir.exists())
-    // {
-    //     save_img_dir_dir.mkdir(save_img_dir.data());
-    // }
-    // QDir jobworker_save_img_dir_dir(jobworker_save_img_dir.data());
-    // if(!jobworker_save_img_dir_dir.exists())
-    // {
-    //     jobworker_save_img_dir_dir.mkdir(jobworker_save_img_dir.data());
-    // }
+
     createMultipleFolders(jobworker_save_img_dir.data());
 
     cv::imwrite(save_img_path, img);
@@ -1069,16 +1077,7 @@ void JobWorker::save_ng_img()
     std::string save_img_dir = QDir::currentPath().toStdString() + "/save_ng_img";
     // std::string save_img_dir = "/data/save_ng_img";
     std::string jobworker_save_img_dir = save_img_dir + "/jobworker" + std::to_string(cam_id);
-    // QDir save_img_dir_dir(save_img_dir.data());
-    // if(!save_img_dir_dir.exists())
-    // {
-    //     save_img_dir_dir.mkdir(save_img_dir.data());
-    // }
-    // QDir jobworker_save_img_dir_dir(jobworker_save_img_dir.data());
-    // if(!jobworker_save_img_dir_dir.exists())
-    // {
-    //     jobworker_save_img_dir_dir.mkdir(jobworker_save_img_dir.data());
-    // }
+
     createMultipleFolders(jobworker_save_img_dir.data());
 
     //清除多余图片
@@ -1101,7 +1100,9 @@ void JobWorker::save_ng_img()
     }
     // 保存图片
     QDateTime _t = QDateTime::currentDateTime();
-    std::string save_img_path = jobworker_save_img_dir + "/" + std::to_string(_t.toMSecsSinceEpoch()) + ".bmp";
+    // std::string save_img_path = jobworker_save_img_dir + "/" + std::to_string(_t.toMSecsSinceEpoch()) + ".bmp";
+    std::string save_img_path = jobworker_save_img_dir + "/" + _t.toString("yyyy_MM_dd_hh_mm_ss_zzz").toStdString() + ".bmp";
+
     cv::imwrite(save_img_path, img);
 }
 

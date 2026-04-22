@@ -813,7 +813,10 @@ void JobManager::rundemo(int id)
 {
     int CamID = id;
     jobworkers[CamID].is_busy = true;
+    jobworkers[CamID].isSiming = true;
     jobworkers[CamID].run();
+    jobworkers[CamID].isSiming = false;
+
 }
 
 void JobManager::TongJi(bool rt)

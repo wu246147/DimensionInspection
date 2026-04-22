@@ -556,6 +556,9 @@ private slots:
 
     void on_pushButton_light2_clicked(bool checked);
 
+    void on_widget_customContextMenuRequested(const QPoint &pos);
+
+
 signals:
 
     ///
